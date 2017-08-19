@@ -80,7 +80,7 @@ object Renderer {
       })
       .map(link => new HBox {
         alignment = Pos.CenterLeft
-        children = Seq(Label("帮助页面：更多信息请参考 —— "), link)
+        children = Seq(new TextFlow(new Text("帮助页面：更多信息请参考 —— ")), link)
       })
     val renderedLogs = richLogs.map { case (log, optCom) => renderRichLog(log, optCom) }
     val tailNodes = optRenderedLink.map(_::renderedLogs).getOrElse(renderedLogs)

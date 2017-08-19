@@ -11,9 +11,9 @@ import scalafx.application.JFXApp
 import scalafx.beans.binding.{Bindings, BooleanBinding, ObjectBinding}
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
-import scalafx.geometry.{Insets, Pos}
+import scalafx.geometry.Insets
 import scalafx.scene.{Node, Scene}
-import scalafx.scene.layout.{HBox, VBox}
+import scalafx.scene.layout.{BorderPane, FlowPane, VBox}
 import scalafx.stage.FileChooser
 import scalafx.event.ActionEvent
 import scalafx.scene.control.ScrollPane.ScrollBarPolicy
@@ -22,6 +22,8 @@ import scalafx.scene.control._
 
 
 object AnalyzerApp extends JFXApp {
+
+  // --------------- 原始日志信息 ------------------
 
   val originalLogsContainer = new VBox
 
@@ -41,7 +43,7 @@ object AnalyzerApp extends JFXApp {
   val lbFileHint = Label(defaultLabel)
   val btnLoadFile = new Button {
     text = "导入本地日志文件"
-    onAction = (e: ActionEvent) => {
+    onAction = (_: ActionEvent) => {
       val chooser = new FileChooser
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
@@ -156,7 +158,7 @@ object AnalyzerApp extends JFXApp {
     originalLogShowNodes() = newNodes
   }
 
-  val filterChecker = Timeline(KeyFrame(500 ms, "", { e: ActionEvent =>
+  val filterChecker = Timeline(KeyFrame(500.ms, "", { _: ActionEvent =>
     if (filterIsUpdated()) {
       filterIsUpdated() = false
       updateOriginLogList()
@@ -164,20 +166,6 @@ object AnalyzerApp extends JFXApp {
   }))
   filterChecker.setCycleCount(Timeline.Indefinite)
   filterChecker.play()
-
-  val logsFilterControllers = new HBox {
-    spacing = 10
-    alignment = Pos.CenterLeft
-    visible <== logListNotNull
-    children = Seq(
-      Label("是否关键日志"), choiceIsKeyLog,
-      Label("日志等级"), choiceLogLevel,
-      Label("日志信息"), inputMessage,
-      Label("打印位置"), inputPosition,
-      cbIsRegex
-    )
-  }
-
 
   // --------------- 帮助信息 ---------------------
 
@@ -239,52 +227,75 @@ object AnalyzerApp extends JFXApp {
 
   // --------------- 主界面 ---------------------
 
-  val mainContainer = new VBox {
-    spacing = 10
-    children = Seq(
-      new HBox {
-        spacing = 30
-        children = List(lbFileHint, lbErrMessage)
-      },
-      new HBox {
-        alignment = Pos.CenterLeft
+  val mainContainer = new BorderPane {
+    top = new VBox {
+      padding = Insets(top = 10, right = 20, left = 20, bottom = 10)
+      spacing = 5
+      children = Seq(
+        lbFileHint,
+        new FlowPane {
+          hgap = 10
+          children = Seq(
+            btnLoadFile,
+            Label("问题描述"), choiceProblem,
+            Label("运行平台"), choicePlatform,
+            btnStartAnalyze
+          )
+        }
+      )
+    }
+    center = new BorderPane {
+      top = new VBox {
+        padding = Insets(top = 0, right = 20, left = 20, bottom = 10)
         spacing = 10
-        children = Seq(btnLoadFile, Label("问题描述"), choiceProblem, Label("运行平台"), choicePlatform, btnStartAnalyze)
-      },
-      new Label {
-        text = "分析结果"
-        style = "-fx-font-size: 20pt"
-        visible <== analyzeResultNotNull
-      },
-      analyzeResultContainer,
-      new Label {
-        text = "原始日志"
-        style = "-fx-font-size: 20pt"
-        visible <== logListNotNull
-      },
-      logsFilterControllers,
-      originalLogsContainer
-    )
-  }
-
-  val mainScroll = new ScrollPane {
-    padding = Insets(20)
-    fitToWidth = true
-    fitToHeight = true
-    hbarPolicy = ScrollBarPolicy.Always
-    vbarPolicy = ScrollBarPolicy.Always
-    content = mainContainer
+        children = Seq(
+          new Label {
+            text = "分析结果"
+            style = "-fx-font-size: 20pt"
+          },
+          analyzeResultContainer,
+          new Label {
+            text = "原始日志"
+            style = "-fx-font-size: 20pt"
+          },
+          new FlowPane {
+            hgap = 10
+            children = Seq(
+              Label("是否关键日志"), choiceIsKeyLog,
+              Label("日志等级"), choiceLogLevel,
+              Label("日志信息"), inputMessage,
+              Label("打印位置"), inputPosition,
+              cbIsRegex
+            )
+          }
+        )
+      }
+      center = new ScrollPane {
+        margin = Insets(top = 0, right = 0, left = 12, bottom = 0)
+        padding = Insets(top = 0, right = 0, left = 5, bottom = 0)
+        style = "-fx-background-color: transparent;" +
+                "-fx-background: #FFFFFF;" +
+                "-fx-border-color: #AAAAAA;"
+        fitToWidth = true
+        fitToHeight = true
+        hbarPolicy = ScrollBarPolicy.AsNeeded
+        vbarPolicy = ScrollBarPolicy.Always
+        content = originalLogsContainer
+      }
+      bottom = lbErrMessage
+    }
   }
 
   stage = new JFXApp.PrimaryStage {
     title.value = "日志分析器"
     width = 1024
-    height = 790
+    height = 768
+    minWidth = 400
+    minHeight = 300
     scene = new Scene {
-      content = mainScroll
+      content = mainContainer
     }
   }
-
-  mainScroll.prefWidth <== stage.width
-  mainScroll.prefHeight <== stage.height - 22
+  mainContainer.prefWidth <== stage.width
+  mainContainer.prefHeight <== stage.height - 22
 }
