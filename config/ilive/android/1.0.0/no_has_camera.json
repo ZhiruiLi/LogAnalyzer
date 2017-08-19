@@ -1,0 +1,10 @@
+{
+  "type": "no_appear",
+  "rule": {
+    "type": "match",
+    "comment": "has camera",
+    "level": "I",
+    "tag": "KEY",
+    "message": "onEndPointEvent->hasCamera"
+  }
+}

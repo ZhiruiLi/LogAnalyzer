@@ -1,0 +1,10 @@
+{
+  "type": "no_appear",
+  "rule": {
+    "type": "match",
+    "comment": "init av root view",
+    "level": "I",
+    "tag": "KEY",
+    "message": "initAvRootView"
+  }
+}

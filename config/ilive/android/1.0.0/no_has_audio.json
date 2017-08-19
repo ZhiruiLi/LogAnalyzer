@@ -1,0 +1,8 @@
+{
+  "type": "no_appear",
+  "rule": {
+    "type": "match",
+    "comment": "has audio",
+    "message": "onEndPointEvent->hasAudio"
+  }
+}

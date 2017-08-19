@@ -1,0 +1,9 @@
+{
+  "type": "no_appear",
+  "rule": {
+    "type": "match",
+    "comment": "render",
+    "level": "I",
+    "message": "onRenderInfoNotify"
+  }
+}

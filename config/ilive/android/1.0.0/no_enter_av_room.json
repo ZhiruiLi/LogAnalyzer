@@ -1,0 +1,10 @@
+{
+  "type": "no_appear",
+  "rule": {
+    "type": "match",
+    "comment": "enter av room success",
+    "level": "I",
+    "tag": "KEY",
+    "message": "enterAVRoom->succuess"
+  }
+}

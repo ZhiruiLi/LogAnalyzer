@@ -1,0 +1,12 @@
+{
+  "type": "appear",
+  "times": 1,
+  "rule": {
+    "type": "match",
+    "comment": "listener is null",
+    "message": "onNewMessages",
+    "extra": {
+      "listener": "null"
+    }
+  }
+}
