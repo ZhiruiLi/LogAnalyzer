@@ -1,7 +1,7 @@
 {
   "problem_bindings": [
     {
-      "problem": 1,
+      "problem": 0,
       "name": "有声音无画面",
       "help_bindings": [
         {
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "problem": 2,
+      "problem": 1,
       "name": "无法接收消息",
       "help_bindings": [
         {
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "problem": 3,
+      "problem": 2,
       "name": "音频事件无回调",
       "help_bindings": [
         {
@@ -49,7 +49,7 @@
       ]
     },
     {
-      "problem": 4,
+      "problem": 3,
       "name": "首帧事件无回调",
       "help_bindings": [
         {
