@@ -1,7 +1,6 @@
 package ui
 
 import com.example.zhiruili.loganalyzer._
-import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig
 import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
 import com.example.zhiruili.loganalyzer.logs._
@@ -16,7 +15,7 @@ import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Insets
 import scalafx.scene.{Node, Scene}
-import scalafx.scene.layout.{BorderPane, FlowPane, HBox, VBox}
+import scalafx.scene.layout.{BorderPane, FlowPane, VBox}
 import scalafx.stage.FileChooser
 import scalafx.event.ActionEvent
 import scalafx.scene.control.ScrollPane.ScrollBarPolicy
