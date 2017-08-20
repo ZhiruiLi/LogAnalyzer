@@ -19,6 +19,27 @@ class UtilsSuite extends FunSuite {
         List(unknownLogs.head, legalLogs.head) ++ logsKeep ++ List(legalLogs(4), unknownLogs(3)))
     }
   }
+
+  test("Time filter should keep all logs if given time is None") {
+    assertResult(Utils.timeFilter(Some(0L), Some(Long.MaxValue))(legalLogs)) {
+      Utils.timeFilter(None, None)(legalLogs)
+    }
+    assertResult(Utils.timeFilter(Some(0L), Some(Long.MaxValue))(unknownLogs ++ legalLogs ++ unknownLogs)) {
+      Utils.timeFilter(None, None)(unknownLogs ++ legalLogs ++ unknownLogs)
+    }
+    assertResult(Utils.timeFilter(testTimes(1), Some(Long.MaxValue))(legalLogs)) {
+      Utils.timeFilter(testTimes(1), None)(legalLogs)
+    }
+    assertResult(Utils.timeFilter(testTimes(1), Some(Long.MaxValue))(unknownLogs ++ legalLogs ++ unknownLogs)) {
+      Utils.timeFilter(testTimes(1), None)(unknownLogs ++ legalLogs ++ unknownLogs)
+    }
+    assertResult(Utils.timeFilter(Some(0L), testTimes(4))(legalLogs)) {
+      Utils.timeFilter(None, testTimes(4))(legalLogs)
+    }
+    assertResult(Utils.timeFilter(Some(0L), testTimes(4))(unknownLogs ++ legalLogs ++ unknownLogs)) {
+      Utils.timeFilter(None, testTimes(4))(unknownLogs ++ legalLogs ++ unknownLogs)
+    }
+  }
 }
 
 object UtilsSuite {

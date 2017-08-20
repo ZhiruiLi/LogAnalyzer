@@ -13,26 +13,28 @@ object Utils {
   def timeFilter(timeStart: Option[Long], timeEnd: Option[Long])(logs: List[LogItem]): List[LogItem] = {
 
     def filterStart(originLogs: List[LogItem], keepLogsRev: List[LogItem]): List[LogItem] = (timeStart, originLogs) match {
-      case (None, _) => originLogs
-      case (_, Nil) => Nil
-      case (Some(timeMin), LegalLog(date, _, _, _, _, _)::remain) =>
-        if (date.getTime < timeMin) filterStart(remain, Nil)
-        else {
-          val tailLogs = timeEnd match {
-            case None => originLogs
-            case Some(timeMax) => filterLogsFromHead(originLogs, timeMax)
-          }
-          keepLogsRev.reverse ++ tailLogs
+      case (_, Nil) =>
+        Nil
+      case (None, _) =>
+        filterLogsFromHead(originLogs)
+      case (Some(start), (log: LegalLog)::remain) =>
+        if (log.timestamp.getTime < start) {
+          filterStart(remain, Nil)
+        } else {
+          filterLogsFromHead(keepLogsRev.reverse ++ originLogs)
         }
       case (_, log::remain) =>
         filterStart(remain, log::keepLogsRev)
     }
 
-    def filterLogsFromHead(originLogs: List[LogItem], timeMax: Long): List[LogItem] = {
-      originLogs.takeWhile {
-        case LegalLog(date, _, _, _, _, _) => date.getTime <= timeMax
-        case _ => true
-      }
+    def filterLogsFromHead(originLogs: List[LogItem]): List[LogItem] = timeEnd match {
+      case None =>
+        originLogs
+      case Some(end) =>
+        originLogs.takeWhile {
+          case log: LegalLog => log.timestamp.getTime <= end
+          case _ => true
+        }
     }
 
     filterStart(logs, Nil)
