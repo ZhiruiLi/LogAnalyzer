@@ -1,8 +1,8 @@
 {
   "problem_bindings": [
     {
-      "problem": 0,
-      "name": "有声音无画面",
+      "problem": "voice_without_frame",
+      "comment": "有声音无画面",
       "help_bindings": [
         {
           "rule_name": "no_enable_camera",
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "problem": 1,
+      "problem": "can_not_receive_message",
       "name": "无法接收消息",
       "help_bindings": [
         {
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "problem": 2,
+      "problem": "no_callback_for_voice_event",
       "name": "音频事件无回调",
       "help_bindings": [
         {
@@ -49,7 +49,7 @@
       ]
     },
     {
-      "problem": 3,
+      "problem": "no_callback_for_first_frame_event",
       "name": "首帧事件无回调",
       "help_bindings": [
         {

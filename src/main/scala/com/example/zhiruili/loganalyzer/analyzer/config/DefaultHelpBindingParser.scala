@@ -1,6 +1,7 @@
 package com.example.zhiruili.loganalyzer.analyzer.config
 
-import com.example.zhiruili.loganalyzer.analyzer.config.AnalyzerConfig.{HelpInfo, HelpInfoBinding, Problem}
+import com.example.zhiruili.loganalyzer.analyzer.{AnalyzerConfig, ExtendConfig, RootConfig}
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, HelpInfoBinding, ProblemTag}
 import play.api.libs.json.{JsArray, JsValue, Json}
 
 import scala.util.Try
@@ -11,8 +12,7 @@ import scala.util.Try
   *   "extend": version,                // 可选，string，继承自其他版本的规则
   *   "problem_bindings": [             // 必选，json 数组，绑定问题和对应的匹配规则
   *     {
-  *       "problem": problem_code,      // 必选，问题代号
-  *       "name": problem_name,         // 必选，问题名，用于给用户提示
+  *       "problem": problem_tag,       // 必选，问题标签
   *       "help_bindings": [            // 必选，绑定匹配规则和帮助信息
   *         {
   *           "rule_name": rule_name,   // 必选，规则名
@@ -37,15 +37,14 @@ import scala.util.Try
   *   ]
   * }
   */
-object DefaultConfigParser extends ConfigParser {
+object DefaultHelpBindingParser extends HelpBindingParser {
 
   object Keys {
 
     val extend: String = "extend"
     val problemBindings: String = "problem_bindings"
 
-    val problemCode: String = "problem"
-    val problemName: String = "name"
+    val problemTag: String = "problem"
     val helpBindings: String = "help_bindings"
 
     val ruleName: String = "rule_name"
@@ -64,10 +63,10 @@ object DefaultConfigParser extends ConfigParser {
     Try((jsValue \ key).as[JsArray]).map(_.value.toList)
   }
 
-  def parseProblemBindings(jsValue: JsValue): Try[List[(Problem, List[HelpInfoBinding])]] = {
+  def parseProblemBindings(jsValue: JsValue): Try[List[(ProblemTag, List[HelpInfoBinding])]] = {
     parseJsonArray(jsValue, Keys.problemBindings)
       .flatMap(rawBinds => rawBinds
-        .foldRight(Try(List.empty[(Problem, List[HelpInfoBinding])])) {
+        .foldRight(Try(List.empty[(ProblemTag, List[HelpInfoBinding])])) {
           case (rawBind, b) => for {
             lst <- b
             binding <- parseProblemBinding(rawBind)
@@ -76,11 +75,10 @@ object DefaultConfigParser extends ConfigParser {
       )
   }
 
-  def parseProblemBinding(jsValue: JsValue): Try[(Problem, List[HelpInfoBinding])] = for {
-    probCode <- Try((jsValue \ Keys.problemCode).as[Int])
-    probName <- Try((jsValue \ Keys.problemName).as[String])
+  def parseProblemBinding(jsValue: JsValue): Try[(ProblemTag, List[HelpInfoBinding])] = for {
+    probTag <- Try((jsValue \ Keys.problemTag).as[String])
     helpBinds <- parseHelpInfoBindings(jsValue)
-  } yield (Problem(probCode, probName), helpBinds)
+  } yield (ProblemTag(probTag), helpBinds)
 
   def parseHelpInfoBindings(jsValue: JsValue): Try[List[HelpInfoBinding]] = {
     parseJsonArray(jsValue, Keys.helpBindings)

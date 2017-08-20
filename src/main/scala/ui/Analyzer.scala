@@ -1,9 +1,10 @@
 package ui
 
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.ProblemTag
 import com.example.zhiruili.loganalyzer.{ILiveSdk, Platform, Sdk}
 import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
-import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzerLoader
-import com.example.zhiruili.loganalyzer.analyzer.config.{ConfigLoader, DefaultConfigParser, FileConfigLoader}
+import com.example.zhiruili.loganalyzer.analyzer.{ConfigLoader, LogAnalyzerLoader}
+import com.example.zhiruili.loganalyzer.analyzer.config.FileConfigLoader
 import com.example.zhiruili.loganalyzer.comment.{CommentBindings, CommentLoader}
 import com.example.zhiruili.loganalyzer.logs._
 import com.example.zhiruili.loganalyzer.rules.{BasicRuleParser, FileRuleLoader, RuleLoader}
@@ -13,11 +14,12 @@ import scala.util.Try
 object Analyzer {
 
   val currentSdk: Sdk = ILiveSdk
-  val configFileName = "_init_.json"
+  val helpBindConfigName = "_init_.json"
+  val problemConfigName = "_problems_.json"
   val configBaseDir = "./config/"
   val generalCommentFileName = "_comments_.json"
   val errorCommentFileName = "_error_comments_.json"
-  val configLoader: ConfigLoader = FileConfigLoader.createSimpleLoader(configBaseDir, configFileName, DefaultConfigParser)
+  val configLoader: ConfigLoader = FileConfigLoader.createSimpleLoader(configBaseDir, helpBindConfigName, problemConfigName)
   val ruleLoader: RuleLoader = FileRuleLoader.createSimpleLoader(configBaseDir, BasicRuleParser)
   val analyzerLoader: LogAnalyzerLoader = LogAnalyzerLoader(configLoader, ruleLoader)
   val logParser: LogParser = LogParser
@@ -30,15 +32,13 @@ object Analyzer {
   lazy val errBindings: ErrBindings = commentBindings.map(_.errorBindings).get.toMap
   lazy val genBindings: GenBindings = commentBindings.map(_.generalBindings).get.toMap
 
-  def analyzeLog(platform: Platform)(logItems: List[LogItem], problemCode: Int): Try[AnalyzeResult] = {
+  def analyzeLog(platform: Platform)(logItems: List[LogItem], problemTag: ProblemTag): Try[List[AnalyzeResult]] = {
 
-    val loader = LogAnalyzerLoader(
-      FileConfigLoader.createSimpleLoader(configBaseDir, configFileName, DefaultConfigParser),
-      FileRuleLoader.createSimpleLoader(configBaseDir, BasicRuleParser))
+    val loader = LogAnalyzerLoader(configLoader, ruleLoader)
 
     for {
       analyzer <- loader.loadAnalyzer(currentSdk, platform, "1.0.0")
-      res <- analyzer.analyzeLogs(problemCode)(logItems)
+      res <- analyzer.analyzeLogs(problemTag)(logItems)
     } yield res
   }
 

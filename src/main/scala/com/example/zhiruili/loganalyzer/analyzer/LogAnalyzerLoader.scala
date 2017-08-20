@@ -1,7 +1,6 @@
 package com.example.zhiruili.loganalyzer.analyzer
 
-import com.example.zhiruili.loganalyzer.analyzer.config.AnalyzerConfig.{HelpInfoBinding, Problem}
-import com.example.zhiruili.loganalyzer.analyzer.config.{ConfigLoader, RootConfig}
+import AnalyzerConfig.{HelpInfoBinding, ProblemTag}
 import com.example.zhiruili.loganalyzer.rules.{Rule, RuleLoader}
 import com.example.zhiruili.loganalyzer.{Platform, Sdk, Version}
 
@@ -44,16 +43,16 @@ trait LogAnalyzerLoader {
     * @return 对应的日志分析器，可能出错
     */
   def loadAnalyzer(sdk: Sdk, platform: Platform, version: Version): Try[LogAnalyzer] = {
-    configLoader.loadBaseConfig(sdk, platform, version).map {
+    configLoader.loadRootConfig(sdk, platform, version).map {
       case RootConfig(problemBindings) =>
         new LogAnalyzer {
-          val problemCodeMap: Map[Int, List[HelpInfoBinding]] = problemBindings.map {
-            case (Problem(code, _), helpBindings) => (code, helpBindings)
-          }.toMap
-          override def loadHelpInfoBindings(problemCode: Int): Option[List[HelpInfoBinding]] = {
-            problemCodeMap.get(problemCode)
-          }
+          val problemCodeMap: Map[ProblemTag, List[HelpInfoBinding]] = problemBindings.toMap
+
           override def loadRuleByName(ruleName: String): Try[Rule] = loadRule(sdk, platform, version, ruleName)
+
+          override def loadHelpInfoBindings(problemTag: ProblemTag): Try[List[HelpInfoBinding]] = Try {
+            problemCodeMap.getOrElse(problemTag, Nil)
+          }
         }
     }
   }

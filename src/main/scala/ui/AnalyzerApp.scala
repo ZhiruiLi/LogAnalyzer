@@ -1,6 +1,8 @@
 package ui
 
 import com.example.zhiruili.loganalyzer._
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.ProblemTag
+import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
 import com.example.zhiruili.loganalyzer.logs._
 
 import scala.io.Source
@@ -96,7 +98,7 @@ object AnalyzerApp extends JFXApp {
   val filterIsUpdated = BooleanProperty(false)
 
   def setFilterExpired(): Unit = {
-    println("expire filter")
+//    println("expire filter")
     filterIsUpdated() = true
   }
 
@@ -224,6 +226,13 @@ object AnalyzerApp extends JFXApp {
   }
 
   val choiceProblem = new ChoiceBox(ObservableBuffer("有声音无画面", "无法接收消息", "音频事件无回调", "首帧事件无回调"))
+
+  val problemTags: Vector[ProblemTag] = Vector(
+    "voice_without_frame",
+    "can_not_receive_message",
+    "no_callback_for_voice_event",
+    "no_callback_for_first_frame_event").map(ProblemTag.apply)
+
   choiceProblem.selectionModel().selectFirst()
   val choicePlatform = new ChoiceBox(ObservableBuffer("Android", "iOS"))
   choicePlatform.selectionModel().selectFirst()
@@ -236,15 +245,15 @@ object AnalyzerApp extends JFXApp {
     text = "开始分析"
     onAction = { _: ActionEvent =>
       val platform = platforms(choicePlatform.selectionModel().getSelectedIndex)
-      val problemCode = choiceProblem.selectionModel().getSelectedIndex
+      val problemTag = problemTags(choiceProblem.selectionModel().getSelectedIndex)
       // println(s"platform: $platform, problem code: $problemCode")
       val startTime = inputAnalyzeStartTime.getTime
       val endTime = inputAnalyzeEndTime.getTime
       // println(s"start time: $startTime, end time: $endTime")
       val filteredLogs = logs.Utils.timeFilter(startTime, endTime)(logList())
-      Analyzer.analyzeLog(platform)(filteredLogs, problemCode) match {
+      Analyzer.analyzeLog(platform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
-          val helpInfoList = resultList.map { case (logItems, helpInfo) =>
+          val helpInfoList = resultList.map { case AnalyzeResult(logItems, helpInfo) =>
             (helpInfo.message, helpInfo.helpPage, logItems)
           }
           helpInfos() = helpInfoList

@@ -1,21 +1,22 @@
 package com.example.zhiruili.loganalyzer.analyzer.config
 
-import com.example.zhiruili.loganalyzer.analyzer.config.AnalyzerConfig.{HelpInfo, HelpInfoBinding, Problem}
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, HelpInfoBinding, ProblemTag}
+import com.example.zhiruili.loganalyzer.analyzer.{ExtendConfig, RootConfig}
 import org.scalatest.FunSuite
 
-class DefaultConfigParserSuite extends FunSuite {
+class DefaultHelpBindingParserSuite extends FunSuite {
 
   test("Parse init json string") {
-    assertResult(DefaultConfigParserSuite.config1) {
-      DefaultConfigParser.parseConfigString(DefaultConfigParserSuite.initJson1).get
+    assertResult(DefaultHelpBindingParserSuite.config1) {
+      DefaultHelpBindingParser.parseConfigString(DefaultHelpBindingParserSuite.initJson1).get
     }
-    assertResult(DefaultConfigParserSuite.config2) {
-      DefaultConfigParser.parseConfigString(DefaultConfigParserSuite.initJson2).get
+    assertResult(DefaultHelpBindingParserSuite.config2) {
+      DefaultHelpBindingParser.parseConfigString(DefaultHelpBindingParserSuite.initJson2).get
     }
   }
 }
 
-object DefaultConfigParserSuite {
+object DefaultHelpBindingParserSuite {
 
   val helpBindStr1: String =
     """
@@ -43,8 +44,8 @@ object DefaultConfigParserSuite {
   val problemBindStr1: String =
     s"""
       |{
-      |  "problem": 1,
-      |  "name": "pb1",
+      |  "problem": "pb1",
+      |  "name": "pb1 name",
       |  "help_bindings": [$helpBindStr1, $helpBindStr2]
       |}
      """.stripMargin
@@ -52,13 +53,13 @@ object DefaultConfigParserSuite {
   val problemBindStr2: String =
     s"""
        |{
-       |  "problem": 2,
-       |  "name": "pb2",
+       |  "problem": "pb2",
+       |  "name": "pb2 name",
        |  "help_bindings": [$helpBindStr2]
        |}
      """.stripMargin
 
-  val problemBind1 = List(Problem(1, "pb1") -> List(helpBind1, helpBind2), Problem(2, "pb2") -> List(helpBind2))
+  val problemBind1 = List(ProblemTag("pb1") -> List(helpBind1, helpBind2), ProblemTag("pb2") -> List(helpBind2))
 
   val initJson1: String =
     s"""

@@ -1,7 +1,7 @@
-package com.example.zhiruili.loganalyzer.analyzer.config
+package com.example.zhiruili.loganalyzer.analyzer
 
 import com.example.zhiruili.loganalyzer.Version
-import com.example.zhiruili.loganalyzer.analyzer.config.AnalyzerConfig.{HelpInfoBinding, Problem}
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfoBinding, ProblemTag}
 
 /**
   * 日志分析器的配置
@@ -13,7 +13,7 @@ sealed trait AnalyzerConfig
   *
   * @param problemBindings  问题和规则与帮助信息的绑定关系
   */
-case class RootConfig(problemBindings: List[(Problem, List[HelpInfoBinding])]) extends AnalyzerConfig
+case class RootConfig(problemBindings: List[(ProblemTag, List[HelpInfoBinding])]) extends AnalyzerConfig
 
 /**
   * 继承配置
@@ -26,12 +26,19 @@ case class ExtendConfig(fromVersion: Version, currConfig: RootConfig) extends An
 object AnalyzerConfig {
 
   /**
+    * 问题标签
+    *
+    * @param value  tag 值
+    */
+  case class ProblemTag(value: String)
+
+  /**
     * 问题
     *
-    * @param code   问题代号
+    * @param tag    问题标签，唯一
     * @param name   问题名称
     */
-  case class Problem(code: Int, name: String)
+  case class Problem(tag: ProblemTag, name: String)
 
   /**
     * 分析成功的帮助提示
