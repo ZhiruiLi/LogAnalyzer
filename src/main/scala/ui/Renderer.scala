@@ -11,11 +11,11 @@ import com.example.zhiruili.loganalyzer.logs._
 import scalafx.event.ActionEvent
 import scalafx.geometry.Pos
 import scalafx.scene.Node
-import scalafx.scene.control.{Hyperlink, Label}
+import scalafx.scene.control.Hyperlink
 import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color._
-import scalafx.scene.text.{Font, Text, TextFlow}
+import scalafx.scene.text.{Text, TextFlow}
 
 object Renderer {
 
@@ -59,7 +59,7 @@ object Renderer {
     text = txt
     fill = color
     style = "-fx-font-family: Menlo, Consolas, Monospace;" +
-            "-fx-font-size: 11pt;"
+            "-fx-font-size: 10pt;"
   }
 
   def renderRichLog(logItem: LogItem, optComment: Option[String]): Node = logItem match {
@@ -73,7 +73,11 @@ object Renderer {
   }
 
   def renderHelpInfo(helpMessage: String, optHelpPage: Option[String], richLogs: List[(LogItem, Option[String])]): Node = {
-    val lbHelpMsg = new TextFlow(new Text(s"帮助信息：$helpMessage"))
+    val lbHelpMsg = new TextFlow(
+      new Text(s"帮助信息：$helpMessage") {
+        style = "-fx-font-size: 10pt;"
+      }
+    )
     val optRenderedLink = optHelpPage
       .map(page => new Hyperlink(page) {
         alignment = Pos.CenterLeft
@@ -83,10 +87,25 @@ object Renderer {
       })
       .map(link => new HBox {
         alignment = Pos.CenterLeft
-        children = Seq(new TextFlow(new Text("帮助页面：更多信息请参考 —— ")), link)
+        children = Seq(
+          new TextFlow(
+            new Text("帮助页面：更多信息请参考 —— ") {
+              style = "-fx-font-size: 10pt;"
+            }),
+          link)
       })
     val renderedLogs = richLogs.map { case (log, optCom) => renderRichLog(log, optCom) }
-    val tailNodes = optRenderedLink.map(_::renderedLogs).getOrElse(renderedLogs)
+    val tailNodes = {
+      val relatedLogNodes = renderedLogs match {
+        case Nil => new Text("没有相关日志") {
+          style = "-fx-font-size: 10pt;"
+        }::Nil
+        case _ => new Text("相关日志：") {
+          style = "-fx-font-size: 10pt;"
+        }::renderedLogs
+      }
+      optRenderedLink.map(_::renderedLogs).getOrElse(relatedLogNodes)
+    }
     new VBox {
       children = lbHelpMsg::tailNodes
     }

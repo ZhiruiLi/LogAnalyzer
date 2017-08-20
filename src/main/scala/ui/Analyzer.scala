@@ -1,6 +1,6 @@
 package ui
 
-import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.ProblemTag
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer.{ILiveSdk, Platform, Sdk}
 import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
 import com.example.zhiruili.loganalyzer.analyzer.{ConfigLoader, LogAnalyzerLoader}
@@ -31,6 +31,8 @@ object Analyzer {
     CommentLoader.ofFile(configBaseDir, errorCommentFileName, generalCommentFileName).loadCommentBindings(currentSdk)
   lazy val errBindings: ErrBindings = commentBindings.map(_.errorBindings).get.toMap
   lazy val genBindings: GenBindings = commentBindings.map(_.generalBindings).get.toMap
+
+  def loadProblemList: List[Problem] = configLoader.loadProblemList(currentSdk).get
 
   def analyzeLog(platform: Platform)(logItems: List[LogItem], problemTag: ProblemTag): Try[List[AnalyzeResult]] = {
 

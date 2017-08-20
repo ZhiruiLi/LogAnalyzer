@@ -1,7 +1,8 @@
 package ui
 
 import com.example.zhiruili.loganalyzer._
-import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.ProblemTag
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
 import com.example.zhiruili.loganalyzer.logs._
 
@@ -15,7 +16,7 @@ import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Insets
 import scalafx.scene.{Node, Scene}
-import scalafx.scene.layout.{BorderPane, FlowPane, VBox}
+import scalafx.scene.layout.{BorderPane, FlowPane, HBox, VBox}
 import scalafx.stage.FileChooser
 import scalafx.event.ActionEvent
 import scalafx.scene.control.ScrollPane.ScrollBarPolicy
@@ -98,7 +99,6 @@ object AnalyzerApp extends JFXApp {
   val filterIsUpdated = BooleanProperty(false)
 
   def setFilterExpired(): Unit = {
-//    println("expire filter")
     filterIsUpdated() = true
   }
 
@@ -225,13 +225,11 @@ object AnalyzerApp extends JFXApp {
     }
   }
 
-  val choiceProblem = new ChoiceBox(ObservableBuffer("有声音无画面", "无法接收消息", "音频事件无回调", "首帧事件无回调"))
+  val problems: List[Problem] = Analyzer.loadProblemList
 
-  val problemTags: Vector[ProblemTag] = Vector(
-    "voice_without_frame",
-    "can_not_receive_message",
-    "no_callback_for_voice_event",
-    "no_callback_for_first_frame_event").map(ProblemTag.apply)
+  val choiceProblem = new ChoiceBox(ObservableBuffer(problems.map(_.name)))
+
+  val problemNameToTag: Map[String, ProblemTag] = problems.map(problem => (problem.name, problem.tag)).toMap
 
   choiceProblem.selectionModel().selectFirst()
   val choicePlatform = new ChoiceBox(ObservableBuffer("Android", "iOS"))
@@ -245,11 +243,9 @@ object AnalyzerApp extends JFXApp {
     text = "开始分析"
     onAction = { _: ActionEvent =>
       val platform = platforms(choicePlatform.selectionModel().getSelectedIndex)
-      val problemTag = problemTags(choiceProblem.selectionModel().getSelectedIndex)
-      // println(s"platform: $platform, problem code: $problemCode")
+      val problemTag = problemNameToTag(choiceProblem.selectionModel().getSelectedItem)
       val startTime = inputAnalyzeStartTime.getTime
       val endTime = inputAnalyzeEndTime.getTime
-      // println(s"start time: $startTime, end time: $endTime")
       val filteredLogs = logs.Utils.timeFilter(startTime, endTime)(logList())
       Analyzer.analyzeLog(platform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
@@ -292,12 +288,12 @@ object AnalyzerApp extends JFXApp {
         children = Seq(
           new Label {
             text = "分析结果"
-            style = "-fx-font-size: 20pt"
+            style = "-fx-font-size: 18pt"
           },
           analyzeResultContainer,
           new Label {
             text = "原始日志"
-            style = "-fx-font-size: 20pt"
+            style = "-fx-font-size: 18pt"
           },
           new FlowPane {
             hgap = 10
