@@ -8,26 +8,31 @@ object Utils {
     * @param timeStart  最早时间(包含)
     * @param timeEnd    最晚时间(包含)
     * @param logs       日志项
-    * @return 日志项
+    * @param asLogItem  隐式转换到 LogItem
+    * @tparam T         任意可以被看作 LogItem 的对象
+    * @return           筛选后的日志项
     */
-  def timeFilter(timeStart: Option[Long], timeEnd: Option[Long])(logs: List[LogItem]): List[LogItem] = {
+  def timeFilter[T](timeStart: Option[Long], timeEnd: Option[Long])(logs: List[T])(implicit asLogItem: T => LogItem): List[T] = {
 
-    def filterStart(originLogs: List[LogItem], keepLogsRev: List[LogItem]): List[LogItem] = (timeStart, originLogs) match {
+    def filterStart(originLogs: List[T], keepLogsRev: List[T]): List[T] = (timeStart, originLogs) match {
       case (_, Nil) =>
         Nil
       case (None, _) =>
         filterLogsFromHead(originLogs)
-      case (Some(start), (log: LegalLog)::remain) =>
-        if (log.timestamp.getTime < start) {
-          filterStart(remain, Nil)
-        } else {
-          filterLogsFromHead(keepLogsRev.reverse ++ originLogs)
-        }
-      case (_, log::remain) =>
-        filterStart(remain, log::keepLogsRev)
+      case (Some(start), logLikeVal::remain) => asLogItem(logLikeVal) match {
+        case log: LegalLog =>
+          if (log.timestamp.getTime < start) {
+            filterStart(remain, Nil)
+          } else {
+            filterLogsFromHead(keepLogsRev.reverse ++ originLogs)
+          }
+        case _ =>
+          println(s"unknown log: $logLikeVal")
+          filterStart(remain, logLikeVal::keepLogsRev)
+      }
     }
 
-    def filterLogsFromHead(originLogs: List[LogItem]): List[LogItem] = timeEnd match {
+    def filterLogsFromHead(originLogs: List[T]): List[T] = timeEnd match {
       case None =>
         originLogs
       case Some(end) =>

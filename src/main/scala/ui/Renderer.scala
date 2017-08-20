@@ -15,13 +15,13 @@ import scalafx.scene.control.{Hyperlink, Label}
 import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color._
-import scalafx.scene.text.{Text, TextFlow}
+import scalafx.scene.text.{Font, Text, TextFlow}
 
 object Renderer {
 
   object Formatter {
 
-    val dateFormatter = new SimpleDateFormat("HH:mm:ss")
+    val dateFormatter = new SimpleDateFormat("yy-MM-dd HH:mm:ss")
 
     def formatDate(date: Date): String = dateFormatter.format(date)
 
@@ -58,6 +58,8 @@ object Renderer {
   def coloredText(txt: String, color: Color) = new Text {
     text = txt
     fill = color
+    style = "-fx-font-family: Menlo, Consolas, Monospace;" +
+            "-fx-font-size: 11pt;"
   }
 
   def renderRichLog(logItem: LogItem, optComment: Option[String]): Node = logItem match {
@@ -74,6 +76,7 @@ object Renderer {
     val lbHelpMsg = new TextFlow(new Text(s"帮助信息：$helpMessage"))
     val optRenderedLink = optHelpPage
       .map(page => new Hyperlink(page) {
+        alignment = Pos.CenterLeft
         onAction = { _: ActionEvent =>
           Desktop.getDesktop.browse(new URI(page))
         }
