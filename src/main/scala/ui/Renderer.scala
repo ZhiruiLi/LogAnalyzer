@@ -104,7 +104,7 @@ object Renderer {
           style = "-fx-font-size: 10pt;"
         }::renderedLogs
       }
-      optRenderedLink.map(_::renderedLogs).getOrElse(relatedLogNodes)
+      optRenderedLink.map(_::relatedLogNodes).getOrElse(relatedLogNodes)
     }
     new VBox {
       children = lbHelpMsg::tailNodes

@@ -1,0 +1,80 @@
+{
+  "problem_bindings": [
+    {
+      "problem": "voice_without_frame",
+      "comment": "有声音无画面",
+      "help_bindings": [
+        {
+          "rule_name": "no_enable_camera",
+          "help_message": "未能成功打开摄像头，需要出现相关日志信息：enable camera succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        },
+        {
+          "rule_name": "no_set_av_root_view",
+          "help_message": "未能成功设置 AV Root View，需要出现相关日志信息：setAVRootView succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        },
+        {
+          "rule_name": "no_add_render",
+          "help_message": "未能成功进行渲染，需要出现相关日志信息：add render succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        }
+      ]
+    },
+    {
+      "problem": "no_voice_nor_frame",
+      "comment": "无声音无画面",
+      "help_bindings": [
+        {
+          "rule_name": "no_enter",
+          "help_message": "未能成功进房，需要出现相关日志信息：enter succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        }
+      ]
+    },
+    {
+      "problem": "can_not_receive_message",
+      "name": "无法接收消息",
+      "help_bindings": [
+        {
+          "rule_name": "no_set_im_listener",
+          "help_message": "未能成功设置 IM 消息监听者，需要出现相关日志信息：set im listener succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        }
+      ]
+    },
+    {
+      "problem": "no_callback_for_voice_event",
+      "name": "音频事件无回调",
+      "help_bindings": [
+        {
+          "rule_name": "no_set_av_listener",
+          "help_message": "未能正确设置 AV 监听者，需要出现相关日志信息：set av listener succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        }
+      ]
+    },
+    {
+      "problem": "no_callback_for_first_frame_event",
+      "name": "首帧事件无回调",
+      "help_bindings": [
+        {
+          "rule_name": "no_set_av_listener",
+          "help_message": "未能正确设置 AV 监听者，需要出现相关日志信息：set av listener succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        }
+      ]
+    },
+    {
+      "problem": "no_callback_for_login_interface",
+      "name": "登录接口无回调",
+      "help_bindings": [
+        {
+          "rule_name": "no_create_instance",
+          "help_message": "未能成功创建相关实例，需要出现相关日志：create instance succ",
+          "help_page": "https://www.qcloud.com/document/product/268/7752"
+        }
+      ]
+    }
+  ]
+}

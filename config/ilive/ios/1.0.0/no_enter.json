@@ -1,0 +1,8 @@
+{
+  "type": "no_appear",
+  "rule": {
+    "type": "match",
+    "comment": "enter succ",
+    "message": "enter succ"
+  }
+}

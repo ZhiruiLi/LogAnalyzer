@@ -21,6 +21,7 @@ import scalafx.event.ActionEvent
 import scalafx.scene.control.ScrollPane.ScrollBarPolicy
 import scalafx.scene.control._
 import scalafx.scene.input.KeyEvent
+import scalafx.scene.text.{Text, TextFlow}
 
 object AnalyzerApp extends JFXApp {
 
@@ -39,9 +40,9 @@ object AnalyzerApp extends JFXApp {
   val logListNotNull: BooleanBinding = createBooleanBinding(() => logList().nonEmpty, logList)
 
   val errMessage: StringProperty = StringProperty("")
-  val lbErrMessage = new Label {
-    text <== errMessage
-  }
+  val errMessageNode = new TextFlow(
+    new Text { text <== errMessage }
+  )
   def setError(str: String): Unit = {
     errMessage() = str
   }
@@ -193,12 +194,12 @@ object AnalyzerApp extends JFXApp {
 
   // --------------- 帮助信息 ---------------------
 
-  val analyzeResultContainer = new VBox
+  val analyzeResultContainer = new VBox {
+    spacing = 10
+  }
 
   // 帮助信息
-  val helpInfos: ObjectProperty[List[(String, Option[String], List[LogItem])]] = ObjectProperty(Nil)
-
-  val noHelpInfoLabel = Label("找不到问题的相关帮助")
+  val helpInfos: ObjectProperty[List[(String, Option[String], List[LogItem])]] = ObjectProperty(List(("dummy", None, Nil)))
 
   // 显示在 analyze result 区域的节点
   val analyzeResultShowNodes: ObjectProperty[List[Node]] = ObjectProperty(Nil)
@@ -211,17 +212,16 @@ object AnalyzerApp extends JFXApp {
   }
 
   helpInfos.onChange {
-    helpInfos() match {
-      case Nil =>
-        analyzeResultShowNodes() = List(noHelpInfoLabel)
-      case helps =>
-        val renderedHelps = helps.map { case (msg, optPage, logs) =>
-          (msg, optPage, logs.map(log => (log, Analyzer.commentLog(log))))
-        }.map { case (msg, optPage, commentedLogs) =>
-          Renderer.renderHelpInfo(msg, optPage, commentedLogs)
-        }
-        analyzeResultShowNodes() = renderedHelps
+    val infos = helpInfos() match {
+      case Nil => List(("未找到帮助信息", None, Nil))
+      case helps => helps
     }
+    val renderedHelps = infos.map { case (msg, optPage, logs) =>
+      (msg, optPage, logs.map(log => (log, Analyzer.commentLog(log))))
+    }.map { case (msg, optPage, commentedLogs) =>
+      Renderer.renderHelpInfo(msg, optPage, commentedLogs)
+    }
+    analyzeResultShowNodes() = renderedHelps
   }
 
   val problems: List[Problem] = Analyzer.loadProblemList
@@ -258,6 +258,11 @@ object AnalyzerApp extends JFXApp {
     }
   }
 
+  val btnClearAnalyzeResult = new Button {
+    text = "清空帮助信息"
+    onAction = { _: ActionEvent => helpInfos() = Nil }
+  }
+
   // --------------- 主界面 ---------------------
 
   val mainContainer = new BorderPane {
@@ -275,7 +280,7 @@ object AnalyzerApp extends JFXApp {
             Label("问题描述"), choiceProblem,
             Label("运行平台"), choicePlatform,
             Label("时间区间 从"), inputAnalyzeStartTime, Label("至"), inputAnalyzeEndTime,
-            btnStartAnalyze
+            btnStartAnalyze, btnClearAnalyzeResult
           )
         }
       )
@@ -320,7 +325,7 @@ object AnalyzerApp extends JFXApp {
         vbarPolicy = ScrollBarPolicy.Always
         content = originalLogsContainer
       }
-      bottom = lbErrMessage
+      bottom = errMessageNode
     }
   }
 

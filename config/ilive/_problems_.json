@@ -1,6 +1,8 @@
 {
   "voice_without_frame": "有声音无画面",
+  "no_voice_nor_frame": "无声音无画面",
   "can_not_receive_message": "无法接收消息",
   "no_callback_for_voice_event": "音频事件无回调",
-  "no_callback_for_first_frame_event": "首帧事件无回调"
+  "no_callback_for_first_frame_event": "首帧事件无回调",
+  "no_callback_for_login_interface": "登录接口无回调"
 }

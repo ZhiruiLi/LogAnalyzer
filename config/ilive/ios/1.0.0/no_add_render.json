@@ -1,0 +1,8 @@
+{
+  "type": "no_appear",
+  "rule": {
+    "type": "match",
+    "comment": "add render succ",
+    "message": "add render succ"
+  }
+}

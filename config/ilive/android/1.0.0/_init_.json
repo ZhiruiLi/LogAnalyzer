@@ -32,7 +32,7 @@
       "help_bindings": [
         {
           "rule_name": "null_message_listener",
-          "help_message": "缺少消息监听者",
+          "help_message": "缺少消息监听者，onNewMessages 回调发现 listener 为 null",
           "help_page": "https://www.qcloud.com/document/product/268/7752"
         }
       ]
