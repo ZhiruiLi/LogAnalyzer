@@ -30,7 +30,7 @@ object UtilsSuite {
       .map(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse)
       .toList
 
-  val testTimes: List[Long] = testDates.map(_.getTime)
+  val testTimes: List[Option[Long]] = testDates.map(_.getTime).map(time => Some(time))
 
   val legalLogs: List[LegalLog] =
     testDates.map(date => LegalLog(date, isKeyLog = true, LvDebug, "", "", Map.empty))

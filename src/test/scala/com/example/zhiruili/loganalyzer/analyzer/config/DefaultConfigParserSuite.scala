@@ -26,7 +26,7 @@ object DefaultConfigParserSuite {
       |}
     """.stripMargin
 
-  val helpInfo1 = HelpInfo("ui", Some("www.xxx.com"))
+  val helpInfo1 = HelpInfo("hello", Some("www.xxx.com"))
   val helpBind1 = HelpInfoBinding("aaa", helpInfo1)
 
   val helpBindStr2: String =
