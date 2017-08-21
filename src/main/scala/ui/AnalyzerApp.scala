@@ -1,8 +1,7 @@
 package ui
 
 import com.example.zhiruili.loganalyzer._
-import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{Problem, ProblemTag}
-import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer.logs._
 
 import scala.io.Source
@@ -39,6 +38,7 @@ object AnalyzerApp extends JFXApp {
   val logList: ObjectProperty[List[LogItem]] = ObjectProperty(Nil)
   val logListNotNull: BooleanBinding = createBooleanBinding(() => logList().nonEmpty, logList)
 
+  // 错误信息
   val errMessage: StringProperty = StringProperty("")
   val errMessageNode = new TextFlow(
     new Text { text <== errMessage }
@@ -97,7 +97,6 @@ object AnalyzerApp extends JFXApp {
   }
 
   val filterIsUpdated = BooleanProperty(false)
-
   def setFilterExpired(): Unit = {
     filterIsUpdated() = true
   }
@@ -157,15 +156,18 @@ object AnalyzerApp extends JFXApp {
       case "" => None
       case s =>
         Some(
-          if (isRegex) s
-          else s.flatMap { c =>
-            if (c.isLetter)
-              s"[${c.toUpper}${c.toLower}]"
-            else if (c.isSpaceChar)
-              s".*"
-            else if (regexChars(c))
-              s"\\$c"
-            else s"$c"
+          if (isRegex) {
+            s
+          } else {
+            s.flatMap { c =>
+              if (c.isLetter)
+                s"[${c.toUpper}${c.toLower}]"
+              else if (c.isSpaceChar)
+                s".*"
+              else if (regexChars(c))
+                s"\\$c"
+              else s"$c"
+            }
           }
         ).map(_.r)
     }
@@ -203,7 +205,7 @@ object AnalyzerApp extends JFXApp {
   }
 
   // 帮助信息
-  val helpInfos: ObjectProperty[List[(String, Option[String], List[LogItem])]] = ObjectProperty(List(("dummy", None, Nil)))
+  val helpInfos: ObjectProperty[Option[List[(HelpInfo, List[LogItem])]]] = ObjectProperty(None)
 
   // 显示在 analyze result 区域的节点
   val analyzeResultShowNodes: ObjectProperty[List[Node]] = ObjectProperty(Nil)
@@ -216,14 +218,15 @@ object AnalyzerApp extends JFXApp {
   }
 
   helpInfos.onChange {
-    val infos = helpInfos() match {
-      case Nil => List(("未分析出可能原因", Some("https://www.qcloud.com/document/product/268/7752"), Nil))
-      case helps => helps
+    val infos: List[(HelpInfo, List[LogItem])] = helpInfos() match {
+      case None => Nil
+      case Some(Nil) => List((HelpInfo("未分析出可能原因", Some("https://www.qcloud.com/document/product/268/7752")), Nil))
+      case Some(helps) => helps
     }
-    val renderedHelps = infos.map { case (msg, optPage, logs) =>
-      (msg, optPage, logs.map(log => (log, Analyzer.commentLog(log))))
-    }.map { case (msg, optPage, commentedLogs) =>
-      Renderer.renderHelpInfo(msg, optPage, commentedLogs)
+    val renderedHelps = infos.map { case (helpInfos, logs) =>
+      (helpInfos, logs.map(log => (log, Analyzer.commentLog(log))))
+    }.map { case (helpInfo, commentedLogs) =>
+      Renderer.renderHelpInfo(helpInfo, commentedLogs)
     }
     analyzeResultShowNodes() = renderedHelps
   }
@@ -252,10 +255,8 @@ object AnalyzerApp extends JFXApp {
       val filteredLogs = logs.Utils.timeFilter(startTime, endTime)(logList())
       Analyzer.analyzeLog(platform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
-          val helpInfoList = resultList.map { case AnalyzeResult(logItems, helpInfo) =>
-            (helpInfo.message, helpInfo.helpPage, logItems)
-          }
-          helpInfos() = helpInfoList
+          val helpInfoList = resultList.map(res => (res.helpInfo, res.relatedLogs))
+          helpInfos() = Some(helpInfoList)
         case Failure(thw) =>
           setError(thw.getMessage)
       }
@@ -264,7 +265,7 @@ object AnalyzerApp extends JFXApp {
 
   val btnClearAnalyzeResult = new Button {
     text = "清空帮助信息"
-    onAction = { _: ActionEvent => helpInfos() = Nil }
+    onAction = { _: ActionEvent => helpInfos() = None }
   }
 
   // --------------- 主界面 ---------------------
@@ -296,6 +297,8 @@ object AnalyzerApp extends JFXApp {
         children = Seq(
           new Label {
             text = "帮助信息"
+            managed <== createBooleanBinding(() => helpInfos().nonEmpty, helpInfos)
+            visible <== managed
             style = "-fx-font-size: 18pt"
           },
           analyzeResultContainer,

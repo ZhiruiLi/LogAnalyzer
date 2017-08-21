@@ -73,14 +73,14 @@ object Renderer {
       coloredText(Formatter.formatUnknownLog(log), defaultColor)
   }
 
-  def renderHelpInfo(helpMessage: String, optHelpPage: Option[String], richLogs: List[(LogItem, Option[String])]): Node = {
+  def renderHelpInfo(helpInfo: HelpInfo, richLogs: List[(LogItem, Option[String])]): Node = {
     val lbHelpMsg = new HBox {
       children = Seq(
         new Label("可能原因："){ style = "-fx-font-size: 12pt;" },
-        new TextFlow(new Text(helpMessage) { style = "-fx-font-size: 12pt;" })
+        new TextFlow(new Text(helpInfo.message) { style = "-fx-font-size: 12pt;" })
       )
     }
-    val optRenderedLink = optHelpPage
+    val optRenderedLink = helpInfo.helpPage
       .map(page => new Hyperlink(page) {
         onAction = { _: ActionEvent => Desktop.getDesktop.browse(new URI(page)) }
       })
@@ -107,9 +107,5 @@ object Renderer {
       spacing = 5
       children = lbHelpMsg::tailNodes
     }
-  }
-
-  def renderHelpInfos(helpInfos: List[(List[(LogItem, Option[String])], HelpInfo)]): Node = {
-    ???
   }
 }
