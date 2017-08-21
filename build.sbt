@@ -9,3 +9,6 @@ libraryDependencies += "org.scalactic" %% "scalactic" % "3.0.1"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test"
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
 libraryDependencies += "com.typesafe.play" % "play-json_2.11" % "2.4.0-M2"
+
+// mainClass in assembly := Some("ui.AnalyzerApp")
+assemblyJarName in assembly := "run.jar"
