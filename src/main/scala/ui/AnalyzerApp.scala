@@ -217,7 +217,7 @@ object AnalyzerApp extends JFXApp {
 
   helpInfos.onChange {
     val infos = helpInfos() match {
-      case Nil => List(("未找到帮助信息", None, Nil))
+      case Nil => List(("未分析出可能原因", Some("https://www.qcloud.com/document/product/268/7752"), Nil))
       case helps => helps
     }
     val renderedHelps = infos.map { case (msg, optPage, logs) =>
@@ -295,7 +295,7 @@ object AnalyzerApp extends JFXApp {
         spacing = 10
         children = Seq(
           new Label {
-            text = "分析结果"
+            text = "帮助信息"
             style = "-fx-font-size: 18pt"
           },
           analyzeResultContainer,

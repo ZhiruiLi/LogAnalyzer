@@ -27,7 +27,6 @@ object Utils {
             filterLogsFromHead(keepLogsRev.reverse ++ originLogs)
           }
         case _ =>
-          println(s"unknown log: $logLikeVal")
           filterStart(remain, logLikeVal::keepLogsRev)
       }
     }

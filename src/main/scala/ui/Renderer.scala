@@ -74,9 +74,8 @@ object Renderer {
 
   def renderHelpInfo(helpMessage: String, optHelpPage: Option[String], richLogs: List[(LogItem, Option[String])]): Node = {
     val lbHelpMsg = new TextFlow(
-      new Text(s"帮助信息：$helpMessage") {
-        style = "-fx-font-size: 10pt;"
-      }
+      new Text(s"可能原因：") { style = "-fx-font-size: 12pt;" },
+      new Text(helpMessage) { style = "-fx-font-size: 13pt;" }
     )
     val optRenderedLink = optHelpPage
       .map(page => new Hyperlink(page) {
@@ -89,17 +88,15 @@ object Renderer {
         alignment = Pos.CenterLeft
         children = Seq(
           new TextFlow(
-            new Text("帮助页面：更多信息请参考 —— ") {
-              style = "-fx-font-size: 10pt;"
+            new Text("帮助页面：") {
+              style = "-fx-font-size: 12pt;"
             }),
           link)
       })
     val renderedLogs = richLogs.map { case (log, optCom) => renderRichLog(log, optCom) }
     val tailNodes = {
       val relatedLogNodes = renderedLogs match {
-        case Nil => new Text("没有相关日志") {
-          style = "-fx-font-size: 10pt;"
-        }::Nil
+        case Nil => Nil // new Text("没有相关日志") { style = "-fx-font-size: 10pt;" }::Nil
         case _ => new Text("相关日志：") {
           style = "-fx-font-size: 10pt;"
         }::renderedLogs
