@@ -98,7 +98,7 @@ object Renderer {
       val relatedLogNodes = renderedLogs match {
         case Nil => Nil // new Text("没有相关日志") { style = "-fx-font-size: 10pt;" }::Nil
         case _ => new Text("相关日志：") {
-          style = "-fx-font-size: 10pt;"
+          style = "-fx-font-size: 12pt;"
         }::renderedLogs
       }
       optRenderedLink.map(_::relatedLogNodes).getOrElse(relatedLogNodes)
