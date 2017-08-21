@@ -137,6 +137,8 @@ object AnalyzerApp extends JFXApp {
   val inputOriginLogStartTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
   val inputOriginLogEndTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
 
+  val regexChars: Set[Char] = "\\^$.[]*+?{}|-,>".toSet
+
   def updateOriginLogList(): Unit = {
     val filterKeyLog = choiceIsKeyLog.selectionModel().getSelectedIndex match {
       case 0 => None
@@ -161,6 +163,8 @@ object AnalyzerApp extends JFXApp {
               s"[${c.toUpper}${c.toLower}]"
             else if (c.isSpaceChar)
               s".*"
+            else if (regexChars(c))
+              s"\\$c"
             else s"$c"
           }
         ).map(_.r)
@@ -171,7 +175,7 @@ object AnalyzerApp extends JFXApp {
       logs.Utils.timeFilter(inputOriginLogStartTime.getTime, inputOriginLogEndTime.getTime)(renderedLogs())
     val newNodes: List[Node] = logsAfterFilter
       .filter {
-        case (LegalLog(time, isKey, lv, pos, msg, _), _) =>
+        case (LegalLog(_, isKey, lv, pos, msg, _), _) =>
           val matchIsKey = filterKeyLog.forall(_ == isKey)
           val matchLv = filterLogLevel.forall(_ == lv)
           val matchPos = filterPosition.forall(_.findFirstIn(pos).nonEmpty)
