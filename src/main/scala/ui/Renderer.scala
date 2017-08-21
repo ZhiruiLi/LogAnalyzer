@@ -6,12 +6,13 @@ import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.HelpInfo
 import com.example.zhiruili.loganalyzer.logs._
 
 import scalafx.event.ActionEvent
 import scalafx.geometry.Pos
 import scalafx.scene.Node
-import scalafx.scene.control.Hyperlink
+import scalafx.scene.control.{Hyperlink, Label}
 import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color._
@@ -25,7 +26,7 @@ object Renderer {
 
     def formatDate(date: Date): String = dateFormatter.format(date)
 
-    def formatIsKey(isKeyLog: Boolean): String = if (isKeyLog) "*" else ""
+    def formatIsKey(isKeyLog: Boolean): String = if (isKeyLog) "*" else " "
 
     def formatLevel(lv: LogLevel): String = lv match {
       case LvDebug => "D"
@@ -66,45 +67,49 @@ object Renderer {
     case log@LegalLog(_, _, lv, _, _, _) =>
       val color = levelColor(lv)
       val logStr = Formatter.formatLegalLog(log)
-      val text = optComment.map(comment => s"$logStr\n$comment").getOrElse(logStr)
+      val text = optComment.map(comment => s"$comment\n  $logStr").getOrElse(s"  $logStr")
       coloredText(text, color)
     case log@UnknownLog(_) =>
       coloredText(Formatter.formatUnknownLog(log), defaultColor)
   }
 
   def renderHelpInfo(helpMessage: String, optHelpPage: Option[String], richLogs: List[(LogItem, Option[String])]): Node = {
-    val lbHelpMsg = new TextFlow(
-      new Text(s"可能原因：") { style = "-fx-font-size: 12pt;" },
-      new Text(helpMessage) { style = "-fx-font-size: 13pt;" }
-    )
+    val lbHelpMsg = new HBox {
+      children = Seq(
+        new Label("可能原因："){ style = "-fx-font-size: 12pt;" },
+        new TextFlow(new Text(helpMessage) { style = "-fx-font-size: 12pt;" })
+      )
+    }
     val optRenderedLink = optHelpPage
       .map(page => new Hyperlink(page) {
-        alignment = Pos.CenterLeft
-        onAction = { _: ActionEvent =>
-          Desktop.getDesktop.browse(new URI(page))
-        }
+        onAction = { _: ActionEvent => Desktop.getDesktop.browse(new URI(page)) }
       })
       .map(link => new HBox {
         alignment = Pos.CenterLeft
         children = Seq(
-          new TextFlow(
-            new Text("帮助页面：") {
-              style = "-fx-font-size: 12pt;"
-            }),
-          link)
+          new Label("帮助页面：") {
+            style = "-fx-font-size: 12pt;"
+          }, link)
       })
     val renderedLogs = richLogs.map { case (log, optCom) => renderRichLog(log, optCom) }
     val tailNodes = {
       val relatedLogNodes = renderedLogs match {
-        case Nil => Nil // new Text("没有相关日志") { style = "-fx-font-size: 10pt;" }::Nil
-        case _ => new Text("相关日志：") {
-          style = "-fx-font-size: 12pt;"
-        }::renderedLogs
+        case Nil => Nil
+        case _ => List(new VBox {
+          children = Seq(
+            new Label("相关日志：") { style = "-fx-font-size: 12pt;" },
+            new VBox { children = renderedLogs })
+        })
       }
       optRenderedLink.map(_::relatedLogNodes).getOrElse(relatedLogNodes)
     }
     new VBox {
+      spacing = 5
       children = lbHelpMsg::tailNodes
     }
+  }
+
+  def renderHelpInfos(helpInfos: List[(List[(LogItem, Option[String])], HelpInfo)]): Node = {
+    ???
   }
 }
