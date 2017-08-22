@@ -22,7 +22,7 @@ object Analyzer {
   val configLoader: ConfigLoader = FileConfigLoader.createSimpleLoader(configBaseDir, helpBindConfigName, problemConfigName)
   val ruleLoader: RuleLoader = FileRuleLoader.createSimpleLoader(configBaseDir, BasicRuleParser)
   val analyzerLoader: LogAnalyzerLoader = LogAnalyzerLoader(configLoader, ruleLoader)
-  val logParser: LogParser = LogParser
+  val logParser: LogParser = BasicLogParser
 
   type ErrBindings = Map[(String, Int), String]
   type GenBindings = Map[String, String]

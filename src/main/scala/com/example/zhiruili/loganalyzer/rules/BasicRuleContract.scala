@@ -25,6 +25,7 @@ object BasicRuleContract {
   }
 
   object LogLevel {
+    val verbose: String = "V"
     val debug: String = "D"
     val info: String = "I"
     val warn: String = "W"

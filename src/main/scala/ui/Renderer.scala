@@ -29,6 +29,7 @@ object Renderer {
     def formatIsKey(isKeyLog: Boolean): String = if (isKeyLog) "*" else " "
 
     def formatLevel(lv: LogLevel): String = lv match {
+      case LvVerbose => "V"
       case LvDebug => "D"
       case LvInfo => "I"
       case LvWarn => "W"
@@ -50,7 +51,7 @@ object Renderer {
   }
 
   val levelColorMap: Map[LogLevel, Color] =
-    Map(LvError -> Red, LvWarn -> Orange, LvInfo -> Blue, LvDebug -> Black)
+    Map(LvError -> Red, LvWarn -> Orange, LvInfo -> Black, LvDebug -> Black, LvVerbose -> Black)
 
   val defaultColor: Color = DarkGray
 

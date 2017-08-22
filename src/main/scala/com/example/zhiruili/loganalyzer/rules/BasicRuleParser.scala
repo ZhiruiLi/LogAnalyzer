@@ -85,6 +85,7 @@ object BasicRuleParser extends RuleParser {
   }
 
   private val logLevelMap = Map(
+    LogLevel.verbose -> LvVerbose,
     LogLevel.debug -> LvDebug,
     LogLevel.info -> LvInfo,
     LogLevel.warn -> LvWarn,

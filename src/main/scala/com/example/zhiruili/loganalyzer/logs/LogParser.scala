@@ -8,10 +8,3 @@ import scala.util.Try
 trait LogParser {
   def parseLogString(logString: String): Try[List[LogItem]]
 }
-
-object LogParser extends LogParser {
-
-  def parseLogString(logString: String): Try[List[LogItem]] = Try {
-    LogParsers.parse(LogParsers.logItems, logString).get
-  }
-}

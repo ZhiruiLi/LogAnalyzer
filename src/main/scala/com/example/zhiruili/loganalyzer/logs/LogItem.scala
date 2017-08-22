@@ -10,6 +10,7 @@ sealed trait LogLevel {
   def >(that: LogLevel): Boolean = levelVal > that.levelVal
   def <(that: LogLevel): Boolean = levelVal < that.levelVal
 }
+case object LvVerbose extends LogLevel { protected val levelVal = 0 }
 case object LvDebug extends LogLevel { protected val levelVal = 1 }
 case object LvInfo extends LogLevel { protected val levelVal = 2 }
 case object LvWarn extends LogLevel { protected val levelVal = 3 }
@@ -37,6 +38,26 @@ case class LegalLog(timestamp: Date,
                     message: String,
                     extMessage: Map[String, String]
                    ) extends LogItem
+
+/**
+  * 非合法日志，但可能包含某些信息
+  *
+  * @param originalLog  原始日志
+  * @param timestamp    时间戳
+  * @param isKeyLog     是否为关键路径日志，取值为 KEY（表示是）或 DEV（表示否）
+  * @param level        日志等级，取值为 D 或 I 或 W 或 E（严重等级依次升高）
+  * @param position     打印日志的位置，例如 函数名、类名、文件名 等
+  * @param message      日志基本信息字符串
+  * @param extMessage   日志额外信息，键值对，用 : 分割键与值，用 | 分割多对键值，允许仅有键没有值
+  */
+case class PotentialLog(originalLog: String,
+                        timestamp: Option[Date],
+                        isKeyLog: Option[Boolean],
+                        level: Option[LogLevel],
+                        position: Option[String],
+                        message: Option[String],
+                        extMessage: Map[String, String]
+                       ) extends LogItem
 
 /**
   * 未知日志项

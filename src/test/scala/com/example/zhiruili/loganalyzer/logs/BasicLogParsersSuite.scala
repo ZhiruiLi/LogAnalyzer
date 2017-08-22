@@ -3,19 +3,20 @@ package com.example.zhiruili.loganalyzer.logs
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import com.example.zhiruili.loganalyzer.logs.BasicLogParser.BasicLogParsers
 import com.example.zhiruili.loganalyzer.logs.TestLogs._
 import org.scalatest.FunSuite
 
-class LogParsersSuite extends FunSuite {
+class BasicLogParsersSuite extends FunSuite {
 
   test("isKeyLog should only match KEY and DEV") {
-    assert(LogParsers.parseAll(LogParsers.isKeyLog, "KEY").get)
-    assert(!LogParsers.parseAll(LogParsers.isKeyLog, "DEV").get)
-    assertThrows[RuntimeException](LogParsers.parseAll(LogParsers.isKeyLog, "KKK").get)
+    assert(BasicLogParsers.parseAll(BasicLogParsers.isKeyLog, "KEY").get)
+    assert(!BasicLogParsers.parseAll(BasicLogParsers.isKeyLog, "DEV").get)
+    assertThrows[RuntimeException](BasicLogParsers.parseAll(BasicLogParsers.isKeyLog, "KKK").get)
   }
 
   test("extMessage should match kv-pairs separated by | where each pair of key value should be divided by :") {
-    def parse(str: String) = LogParsers.parseAll(LogParsers.extMessage, str).get
+    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.extMessage, str).get
     assertResult(Map("abc" -> "def"))(parse("abc:def"))
     assertResult(Map("abc" -> "def"))(parse(" abc : def "))
     assertResult(Map("abc" -> "def", "123" -> "456"))(parse("abc:def|123:456"))
@@ -23,7 +24,7 @@ class LogParsersSuite extends FunSuite {
   }
 
   test("extMessage should allow item that only contains key") {
-    def parse(str: String) = LogParsers.parseAll(LogParsers.extMessage, str).get
+    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.extMessage, str).get
     assertResult(Map("abc" -> ""))(parse("abc:"))
     assertResult(Map("abc" -> ""))(parse(" abc : "))
     assertResult(Map("abc" -> ""))(parse("abc"))
@@ -33,7 +34,7 @@ class LogParsersSuite extends FunSuite {
   }
 
   test("Values of kv-pairs in extMessage can contains : , but can't contain |") {
-    def parse(str: String) = LogParsers.parseAll(LogParsers.extMessage, str).get
+    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.extMessage, str).get
     assertResult(Map("abc" -> "d:e:f"))(parse("abc:d:e:f"))
     assertResult(Map("abc" -> "d:e:f"))(parse(" abc : d:e:f "))
     assertResult(Map("abc" -> "d:e:f", "123" -> "4:5:6"))(parse("abc:d:e:f|123:4:5:6"))
@@ -41,7 +42,7 @@ class LogParsersSuite extends FunSuite {
   }
 
   test("extMessage can't be empty nor contains no keys") {
-    def parse(str: String) = LogParsers.parseAll(LogParsers.extMessage, str).get
+    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.extMessage, str).get
     assertThrows[RuntimeException](parse("   "))
     assertThrows[RuntimeException](parse("|"))
     assertThrows[RuntimeException](parse(":"))
@@ -49,7 +50,7 @@ class LogParsersSuite extends FunSuite {
   }
 
   test("Legal logs should be parse to instances of LegalLog") {
-    def parse(str: String) = LogParsers.parseAll(LogParsers.logItem, str).get
+    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.logItem, str).get
     assertResult(legalLog1)(parse(legalLogStr11))
     assertResult(legalLog1)(parse(legalLogStr12))
     assertResult(legalLog2)(parse(legalLogStr21))
@@ -59,7 +60,7 @@ class LogParsersSuite extends FunSuite {
   }
 
   test("Illegal logs should be parse to instances of Unknown") {
-    def parse(str: String) = LogParsers.parseAll(LogParsers.logItem, str).get
+    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.logItem, str).get
     assertResult(unknownLog1)(parse(illegalLogStr1))
     assertResult(unknownLog2)(parse(illegalLogStr2))
     assertResult(unknownLog3)(parse(illegalLogStr3))
@@ -81,7 +82,7 @@ class LogParsersSuite extends FunSuite {
       legalLog1, unknownLog1, legalLog1, unknownLog2,
       legalLog2, unknownLog3, legalLog2, unknownLog4,
       legalLog3, unknownLog5, legalLog3, unknownLog6)
-    def parse(str: String) = LogParsers.parseAll(LogParsers.logItems, str).get
+    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.logItems, str).get
     assertResult(expectLogs)(parse(logStr1))
     assertResult(expectLogs)(parse(logStr2))
     assertResult(expectLogs)(parse(logStr3))

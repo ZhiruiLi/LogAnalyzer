@@ -63,7 +63,7 @@ object AnalyzerApp extends JFXApp {
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
         println(selectedFile)
-        Try(Source.fromFile(selectedFile).mkString).flatMap(LogParser.parseLogString) match {
+        Try(Source.fromFile(selectedFile).mkString).flatMap(Analyzer.logParser.parseLogString) match {
           case Success(items) =>
             logList() = items
             lbFileHint.text = selectedFile.getAbsolutePath
@@ -109,7 +109,7 @@ object AnalyzerApp extends JFXApp {
     setFilterExpired()
   }
 
-  val choiceLogLevel = new ChoiceBox(ObservableBuffer(strNotRestraint, "Debug", "Info", "Warn", "Error"))
+  val choiceLogLevel = new ChoiceBox(ObservableBuffer(strNotRestraint, "Verbose", "Debug", "Info", "Warn", "Error"))
   choiceLogLevel.selectionModel().selectFirst()
   choiceLogLevel.selectionModel().selectedIndexProperty().onChange {
     setFilterExpired()
@@ -146,10 +146,11 @@ object AnalyzerApp extends JFXApp {
     }
     val filterLogLevel = choiceLogLevel.selectionModel().getSelectedIndex match {
       case 0 => None
-      case 1 => Some(LvDebug)
-      case 2 => Some(LvInfo)
-      case 3 => Some(LvWarn)
-      case 4 => Some(LvError)
+      case 1 => Some(LvVerbose)
+      case 2 => Some(LvDebug)
+      case 3 => Some(LvInfo)
+      case 4 => Some(LvWarn)
+      case 5 => Some(LvError)
     }
     val isRegex = cbIsRegex.selected()
     def createRegex(str: String) = str.trim match {
