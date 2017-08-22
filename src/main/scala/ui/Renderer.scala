@@ -45,6 +45,15 @@ object Renderer {
         s"(${formatExt(log.extMessage)}) [${log.position}][${formatLevel(log.level)}]"
     }
 
+    def formatEquivocalLog(log: EquivocalLog): String = {
+      def placeholder(tag: String) = s"<$tag: none>"
+      s"${log.isKeyLog.map(formatIsKey).getOrElse(placeholder("关键日志"))} " +
+        s"[${log.timestamp.map(formatDate).getOrElse(placeholder("打印时间"))}] " +
+        s"${log.message.getOrElse(placeholder("日志信息"))} " +
+        s"(${formatExt(log.extMessage)}) [${log.position.getOrElse(placeholder("打印位置"))}] " +
+        s"[${log.level.map(formatLevel).getOrElse(placeholder("日志等级"))}]"
+    }
+
     def formatUnknownLog(log: UnknownLog): String = {
       log.originalLog
     }
@@ -64,17 +73,22 @@ object Renderer {
             "-fx-font-size: 10pt;"
   }
 
-  def renderRichLog(logItem: LogItem, optComment: Option[String]): Node = logItem match {
-    case log@LegalLog(_, _, lv, _, _, _) =>
+  def renderRichLog(logItem: LogItem, comments: List[String]): Node = logItem match {
+    case log@LegalLog(_, _, _, lv, _, _, _) =>
       val color = levelColor(lv)
       val logStr = Formatter.formatLegalLog(log)
-      val text = optComment.map(comment => s"$comment\n  $logStr").getOrElse(s"  $logStr")
+      val text = s"${comments.mkString("\n")}\n  $logStr"
+      coloredText(text, color)
+    case log@EquivocalLog(originalLog, _, _, optLv, _, _, _) =>
+      val color = optLv.map(levelColor).getOrElse(defaultColor)
+      val logStr = Formatter.formatEquivocalLog(log)
+      val text = s"${comments.mkString("\n")}\n $logStr\n 原始日志：$originalLog"
       coloredText(text, color)
     case log@UnknownLog(_) =>
       coloredText(Formatter.formatUnknownLog(log), defaultColor)
   }
 
-  def renderHelpInfo(helpInfo: HelpInfo, richLogs: List[(LogItem, Option[String])]): Node = {
+  def renderHelpInfo(helpInfo: HelpInfo, richLogs: List[(LogItem, List[String])]): Node = {
     val lbHelpMsg = new HBox {
       children = Seq(
         new Label("可能原因："){ style = "-fx-font-size: 12pt;" },

@@ -10,7 +10,7 @@ trait LogParserDelegateChain extends LogParser {
   def delegateParsing(logStr: String, parsers: List[LogParser]): Option[List[LogItem]] = {
     parsers match {
       case Nil => None
-      case parser::remain => parser.parseLogString(logStr) match {
+      case parser::remain => parser.parseString(logStr) match {
         case Success(logs) => Some(logs)
         case _ => delegateParsing(logStr, remain)
       }
@@ -24,9 +24,9 @@ trait LogParserDelegateChain extends LogParser {
     }
   }
 
-  override def parseLogString(logString: String): Try[List[LogItem]] = {
+  override def parseString(logString: String): Try[List[LogItem]] = {
     basicParser
-      .parseLogString(logString)
+      .parseString(logString)
       .map { logs =>
         logs.view.flatMap {
           case log@UnknownLog(_) =>

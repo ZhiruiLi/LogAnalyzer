@@ -24,12 +24,13 @@ object Analyzer {
   val analyzerLoader: LogAnalyzerLoader = LogAnalyzerLoader(configLoader, ruleLoader)
   val logParser: LogParser = BasicLogParser
 
-  type ErrBindings = Map[(String, Int), String]
+  type ErrBindings = Map[String, Map[Int, String]]
   type GenBindings = Map[String, String]
 
   lazy val commentBindings: Try[CommentBindings] =
     CommentLoader.ofFile(configBaseDir, errorCommentFileName, generalCommentFileName).loadCommentBindings(currentSdk)
-  lazy val errBindings: ErrBindings = commentBindings.map(_.errorBindings).get.toMap
+  lazy val errBindings: ErrBindings =
+    commentBindings.map(_.errorBindings).get.map { case (name, lst) => (name, lst.toMap) }.toMap
   lazy val genBindings: GenBindings = commentBindings.map(_.generalBindings).get.toMap
 
   def loadProblemList: List[Problem] = configLoader.loadProblemList(currentSdk).get
@@ -44,22 +45,32 @@ object Analyzer {
     } yield res
   }
 
-  def commentLog(logItem: LogItem): Option[String] = logItem match {
-    case LegalLog(_, _, lv, _, msg, ext) =>
+  def commentLog(logItem: LogItem): List[String] = logItem match {
+    case LegalLog(_, _, _, lv, _, msg, ext) =>
       val errComment = for {
         _ <- if (lv == LvError) Some(Unit) else None
         errCodeStr <- ext.get(LogItem.errCodeTag)
         errCode <- Try(errCodeStr.toInt).toOption
         errModule <- ext.get(LogItem.errModuleTag)
-        comment <- errBindings.get((errModule, errCode))
+        comment <- errBindings.get(errModule).flatMap(_.get(errCode))
       } yield comment
       val genComment = genBindings.get(msg)
       (errComment, genComment) match {
-        case (None, None) => None
-        case (Some(com), None) => Some(com)
-        case (None, Some(com)) => Some(com)
-        case (Some(com1), Some(com2)) => Some(com1 + "\n" + com2)
+        case (None, None) => Nil
+        case (Some(com), None) => List(com)
+        case (None, Some(com)) => List(com)
+        case (Some(com1), Some(com2)) => List(com1, com2)
       }
-    case UnknownLog(_) => None
+    case EquivocalLog(_, _, _, optLv, _, optMsg, ext) =>
+      val errComments: List[String] = for {
+        lv <- optLv.toList
+        if lv == LvError
+        errCodeStr <- ext.get(LogItem.errCodeTag).toList
+        errCode <- Try(errCodeStr.toInt).toOption.toList
+        comment <- errBindings.flatMap { case (_, map) => map.get(errCode) }.toList
+      } yield comment
+      val genComment = optMsg.flatMap(msg => genBindings.get(msg)).toList
+      errComments ++ genComment
+    case UnknownLog(_) => Nil
   }
 }

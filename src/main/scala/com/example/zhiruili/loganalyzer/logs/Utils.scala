@@ -26,7 +26,16 @@ object Utils {
           } else {
             filterLogsFromHead(keepLogsRev.reverse ++ originLogs)
           }
-        case _ =>
+        case log: EquivocalLog => log.timestamp match {
+          case None => filterStart(remain, logLikeVal::keepLogsRev)
+          case Some(time) =>
+            if (time.getTime < start) {
+              filterStart(remain, Nil)
+            } else {
+              filterLogsFromHead(keepLogsRev.reverse ++ originLogs)
+            }
+        }
+        case _: UnknownLog =>
           filterStart(remain, logLikeVal::keepLogsRev)
       }
     }
@@ -37,7 +46,11 @@ object Utils {
       case Some(end) =>
         originLogs.takeWhile {
           case log: LegalLog => log.timestamp.getTime <= end
-          case _ => true
+          case log: EquivocalLog => log.timestamp match {
+            case None => true
+            case Some(time) => time.getTime <= end
+          }
+          case _: UnknownLog => true
         }
     }
 

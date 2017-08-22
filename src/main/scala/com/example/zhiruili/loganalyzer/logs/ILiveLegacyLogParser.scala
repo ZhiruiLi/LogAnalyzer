@@ -3,13 +3,37 @@ package com.example.zhiruili.loganalyzer.logs
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
+import scala.util.Try
 import scala.util.parsing.combinator.RegexParsers
 
 object ILiveLegacyLogParser extends LogParser {
 
-  def parseLogString(logString: String) = ???
+  type ThreadId = Int
+  type Position = String
+  type ModuleOrKeyTag = String
+  type Message = String
 
-  trait ILiveLegacyLogParsers extends LogParsers {
+  def parseLine(line: String) = Try {
+    ILiveLegacyLogParsers.parseAll(ILiveLegacyLogParsers.potentialLog, line).map {
+      case (time, lv, tId, pos, modOrKey, msg) =>
+        val (optIsKey, optModule) = if (modOrKey == "Key_Procedure") (Some(true), None) else (Some(false), Some(modOrKey))
+        val optErrCode = findErrorCode(msg)
+        val actualLv = optErrCode.map(_ => LvError).getOrElse(lv)
+        val extMap = Map("threadId" -> tId.toString, "module" -> optModule.getOrElse(""))
+        EquivocalLog(line, Some(time), optIsKey, Some(actualLv), Some(pos), Some(msg), extMap)
+    }.getOrElse(UnknownLog(line))
+  }
+
+  def findErrorCode(message: Message): Option[Int] = {
+    val strs = message.split("""([Ee]rror)|([Ff]ail)|([Ee]rrCode)""", 2)
+    if (strs.length == 2) {
+      """\d+""".r.findFirstIn(strs(1)).map(_.toInt)
+    } else {
+      None
+    }
+  }
+
+  trait ILiveLegacyLogParsers extends RegexParsers {
 
     lazy val yearHead: String = (Calendar.getInstance.get(Calendar.YEAR) / 100).toString
 
@@ -41,65 +65,42 @@ object ILiveLegacyLogParser extends LogParser {
     }
 
     /**
-      * 解析任意非方括号字符串
+      * 任意不包含竖线的字符串
       */
-    def anyString: Parser[String] = """[^\[\]]+""".r ^^ (_.trim)
+    def noBarString: Parser[String] = """[^\|]+""".r ^^ (_.trim)
 
     /**
       * 解析打印日志的位置
       */
-    def position: Parser[String] = anyString
+    def position: Parser[String] = noBarString
 
     /**
-      * 解析日志信息
+      * 解析日志打印模块，关键日志解析也在此解析
       */
-    def message: Parser[String] = anyString
+    def module: Parser[String] = noBarString
 
     /**
-      * 解析键值对
-      * 形式为 Key:Value
+      * 解析日志信息，任意字符串
       */
-    def kvPair: Parser[(String, String)] = {
-      def legalKey: Parser[String] = """[^\[\]\|:]+""".r
-      def legalVal: Parser[String] = """[^\[\]\|]*""".r
-      legalKey ~ ((":" ~> legalVal) | success("")) ^^ { case k ~ v => (k.trim, v.trim) }
-    }
+    def message: Parser[String] = """.*""".r ^^ (_.trim)
 
     /**
-      * 解析额外信息，用 |(竖线) 分割
+      * 解析线程 ID
       */
-    def extMessage: Parser[Map[String, String]] = rep1sep(kvPair, "|") ^^ (_.toMap)
+    def threadId: Parser[Int] = """\d+""".r ^^ (_.toInt)
 
     /**
-      * 解析合法日志
+      * 解析模糊日志
       */
-    def legalLog: Parser[LegalLog] = {
+    def potentialLog: Parser[(Date, LogLevel, ThreadId, Position, ModuleOrKeyTag, Message)] = {
 
-      def bracket[T](parser: Parser[T]) = "[" ~> parser <~ "]"
+      def bSep[T](parser: Parser[T]): Parser[T] = parser <~ "|"
 
-      def legalLogPrefix =
-        bracket(timestamp) ~ bracket(isKeyLog) ~ bracket(level) ~ bracket(position) ~ bracket(message)
-
-      legalLogPrefix ~ (bracket(extMessage) | success(Map.empty[String, String])) ^^ {
-        case time ~ isKey ~ lv ~ pos ~ msg ~ ext => LegalLog(time, isKey, lv, pos, msg, ext)
+      bSep(timestamp) ~ bSep(level) ~ bSep(threadId) ~ bSep(position) ~ bSep(module) ~ message ^^ {
+        case time ~ lv ~ tId ~ pos ~ mod ~ msg => (time, lv, tId, pos, mod, msg)
       }
     }
-
-    /**
-      * 解析任意日志
-      */
-    def anyLog: Parser[UnknownLog] = """.+""".r ^^ UnknownLog
-
-    /**
-      * 解析单条日志，如果不是合法日志则被解析为未知日志
-      */
-    def logItem: Parser[LogItem] = (legalLog <~ eol) | (anyLog <~ eol)
-
-    /**
-      * 解析全部日志
-      */
-    def logItems: Parser[List[LogItem]] = phrase(rep(logItem))
   }
 
-
+  object ILiveLegacyLogParsers extends ILiveLegacyLogParsers
 }

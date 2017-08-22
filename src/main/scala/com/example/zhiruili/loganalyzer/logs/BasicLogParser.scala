@@ -4,19 +4,24 @@ import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 
 import scala.util.Try
-import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
 object BasicLogParser extends LogParser {
 
-  def parseLogString(logString: String) = Try {
-    BasicLogParsers.parse(BasicLogParsers.logItems, logString).get
+  type Position = String
+  type Message = String
+  type ExtMessages = Map[String, String]
+
+  def parseLine(line: String): Try[LogItem] = Try {
+    BasicLogParsers.parseAll(BasicLogParsers.legalLog, line).map {
+      case (time, isKey, lv, pos, msg, ext) => LegalLog(line, time, isKey, lv, pos, msg, ext)
+    }.getOrElse(UnknownLog(line))
   }
 
   /**
     * 日志文件解析器组合子
     */
-  trait BasicLogParsers extends LogParsers {
+  trait BasicLogParsers extends RegexParsers {
 
     lazy val yearHead: String = (Calendar.getInstance.get(Calendar.YEAR) / 100).toString
 
@@ -84,7 +89,7 @@ object BasicLogParser extends LogParser {
     /**
       * 解析合法日志
       */
-    def legalLog: Parser[LegalLog] = {
+    def legalLog: Parser[(Date, Boolean, LogLevel, Position, Message, ExtMessages)] = {
 
       def bracket[T](parser: Parser[T]) = "[" ~> parser <~ "]"
 
@@ -92,24 +97,9 @@ object BasicLogParser extends LogParser {
         bracket(timestamp) ~ bracket(isKeyLog) ~ bracket(level) ~ bracket(position) ~ bracket(message)
 
       legalLogPrefix ~ (bracket(extMessage) | success(Map.empty[String, String])) ^^ {
-        case time ~ isKey ~ lv ~ pos ~ msg ~ ext => LegalLog(time, isKey, lv, pos, msg, ext)
+        case time ~ isKey ~ lv ~ pos ~ msg ~ ext => (time, isKey, lv, pos, msg, ext)
       }
     }
-
-    /**
-      * 解析任意日志
-      */
-    def anyLog: Parser[UnknownLog] = """.+""".r ^^ UnknownLog
-
-    /**
-      * 解析单条日志，如果不是合法日志则被解析为未知日志
-      */
-    def logItem: Parser[LogItem] = (legalLog <~ eol) | (anyLog <~ eol)
-
-    /**
-      * 解析全部日志
-      */
-    def logItems: Parser[List[LogItem]] = phrase(rep(logItem))
   }
 
   object BasicLogParsers extends BasicLogParsers

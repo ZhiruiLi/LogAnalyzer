@@ -1,6 +1,6 @@
 package com.example.zhiruili.loganalyzer.rules
 
-import com.example.zhiruili.loganalyzer.logs.{LegalLog, LogItem, LogLevel}
+import com.example.zhiruili.loganalyzer.logs._
 
 import scala.annotation.tailrec
 
@@ -26,29 +26,48 @@ object BasicRules {
                        optMsgRegex: Option[String],
                        extMsgRegex: Map[String, String]) extends Rule {
 
-    override def matchLogItems(logs: List[LogItem]): MatchResult = {
+    private def testOptEqual[T](opt1: Option[T], opt2: Option[T]): Boolean = (for {
+      b1 <- opt1
+      b2 <- opt2
+    } yield b1 == b2).getOrElse(true)
 
-      def matchHelper(logs: List[LogItem], skippedRev: List[LogItem]): MatchResult = logs match {
-        case (log@LegalLog(_, isKey, lv, pos, msg, ext))::remainLogs =>
+    private def testOptRegex(optStr: Option[String], optReg: Option[String]): Boolean = (for {
+      str <- optStr
+      reg <- optReg
+    } yield str.matches(reg)).getOrElse(true)
+
+    override def matchLogItems(logs: List[LogItem]): MatchResult = logs match {
+      case Nil => MatchFailure(Nil, Nil, Nil, Nil)
+      case log::remainLogs => log match {
+        case LegalLog(_, _, isKey, lv, pos, msg, ext) =>
           def matchIsKey = optIsKeyLog.forall(_ == isKey)
-          def matchLevel = optLevel.forall(_ == lv)
+          def matchLv = optLevel.forall(_ == lv)
           def matchPos = optPosRegex.forall(pos.matches)
           def matchMsg = optMsgRegex.forall(msg.matches)
           def matchExt = extMsgRegex.forall {
-            case (key, value) =>
-              // TODO extMsgRegex 的值部分的类型改为 Option[String]，并在这里处理匹配
-              ext.get(key).exists(_.matches(value))
+            // TODO extMsgRegex 的值部分的类型改为 Option[String]，并在这里和下面处理匹配
+            case (key, value) => ext.get(key).exists(_.matches(value))
           }
-          if (matchIsKey && matchLevel && matchPos && matchMsg && matchExt) {
-            MatchSuccess(List(log), skippedRev.reverse, remainLogs)
+          if (matchIsKey && matchLv && matchPos && matchMsg && matchExt) {
+            MatchSuccess(List(log), Nil, remainLogs)
           } else {
             MatchFailure(List(log), Nil, Nil, remainLogs)
           }
-        case unknownLog::remainLogs => MatchFailure(List(unknownLog), Nil, Nil, remainLogs)
-        case Nil => MatchFailure(Nil, Nil, Nil, Nil)
+        case EquivocalLog(_, _, optIsKey, optLv, optPos, optMsg, ext) =>
+          def matchIsKey = testOptEqual(optIsKey, optIsKeyLog)
+          def matchLv = testOptEqual(optLv, optLevel)
+          def matchPos = testOptRegex(optPos, optPosRegex)
+          def matchMsg = testOptRegex(optMsg, optMsgRegex)
+          def matchExt = extMsgRegex.forall {
+            case (key, value) => ext.get(key).exists(_.matches(value))
+          }
+          if (matchIsKey && matchLv && matchPos && matchMsg && matchExt) {
+            MatchSuccess(List(log), Nil, remainLogs)
+          } else {
+            MatchFailure(List(log), Nil, Nil, remainLogs)
+          }
+        case UnknownLog(_) => MatchFailure(List(log), Nil, Nil, remainLogs)
       }
-
-      matchHelper(logs, Nil)
     }
   }
 

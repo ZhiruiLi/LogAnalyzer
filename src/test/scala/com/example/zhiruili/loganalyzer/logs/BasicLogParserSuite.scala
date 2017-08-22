@@ -50,17 +50,17 @@ class BasicLogParsersSuite extends FunSuite {
   }
 
   test("Legal logs should be parse to instances of LegalLog") {
-    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.logItem, str).get
-    assertResult(legalLog1)(parse(legalLogStr11))
-    assertResult(legalLog1)(parse(legalLogStr12))
-    assertResult(legalLog2)(parse(legalLogStr21))
-    assertResult(legalLog2)(parse(legalLogStr22))
-    assertResult(legalLog3)(parse(legalLogStr31))
-    assertResult(legalLog3)(parse(legalLogStr32))
+    def parse(str: String) = BasicLogParser.parseLine(str).get
+    assertResult(legalLog11)(parse(legalLogStr11))
+    assertResult(legalLog12)(parse(legalLogStr12))
+    assertResult(legalLog21)(parse(legalLogStr21))
+    assertResult(legalLog22)(parse(legalLogStr22))
+    assertResult(legalLog31)(parse(legalLogStr31))
+    assertResult(legalLog32)(parse(legalLogStr32))
   }
 
   test("Illegal logs should be parse to instances of Unknown") {
-    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.logItem, str).get
+    def parse(str: String) = BasicLogParser.parseLine(str).get
     assertResult(unknownLog1)(parse(illegalLogStr1))
     assertResult(unknownLog2)(parse(illegalLogStr2))
     assertResult(unknownLog3)(parse(illegalLogStr3))
@@ -79,10 +79,10 @@ class BasicLogParsersSuite extends FunSuite {
     val logStr3 = logStrs.mkString("\n\n\n")
     val logStr4 = logStrs.mkString("\r\n\r\n")
     val expectLogs = List(
-      legalLog1, unknownLog1, legalLog1, unknownLog2,
-      legalLog2, unknownLog3, legalLog2, unknownLog4,
-      legalLog3, unknownLog5, legalLog3, unknownLog6)
-    def parse(str: String) = BasicLogParsers.parseAll(BasicLogParsers.logItems, str).get
+      legalLog11, unknownLog1, legalLog12, unknownLog2,
+      legalLog21, unknownLog3, legalLog22, unknownLog4,
+      legalLog31, unknownLog5, legalLog32, unknownLog6)
+    def parse(str: String) = BasicLogParser.parseString(str).get
     assertResult(expectLogs)(parse(logStr1))
     assertResult(expectLogs)(parse(logStr2))
     assertResult(expectLogs)(parse(logStr3))
@@ -98,9 +98,24 @@ object TestLogs {
   val legalLogStr31 = "[2017-07-31 14:01:15][DEV][E][IMCore][sso recv error][errCode:6012|module:sso_task]"
   val legalLogStr32 = " [ 2017-07-31 14:01:15 ][DEV  ][  E ]  [ IMCore][  sso recv error  ]  [ errCode:6012  |  module:sso_task] "
   val date: Date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2017-07-31 14:01:15")
-  val legalLog1 = LegalLog(date, isKeyLog = true, LvDebug, "ILiveSDK", "initSdk->init", Map("aaa" -> "123", "bbb" -> "", "ccc" -> ""))
-  val legalLog2 = LegalLog(date, isKeyLog = false, LvInfo, "ILVBRoom", "init entered", Map.empty)
-  val legalLog3 = LegalLog(date, isKeyLog = false, LvError, "IMCore", "sso recv error", Map("errCode" -> "6012", "module" -> "sso_task"))
+  val legalLog11 = new LegalLog(legalLogStr11, date, isKeyLog = true, LvDebug, "ILiveSDK", "initSdk->init", Map("aaa" -> "123", "bbb" -> "", "ccc" -> "")) {
+    override def toString: String = "legal11"
+  }
+  val legalLog12 = new LegalLog(legalLogStr12, date, isKeyLog = true, LvDebug, "ILiveSDK", "initSdk->init", Map("aaa" -> "123", "bbb" -> "", "ccc" -> "")) {
+    override def toString: String = "legal12"
+  }
+  val legalLog21 = new LegalLog(legalLogStr21, date, isKeyLog = false, LvInfo, "ILVBRoom", "init entered", Map.empty) {
+    override def toString: String = "legal21"
+  }
+  val legalLog22 = new LegalLog(legalLogStr22, date, isKeyLog = false, LvInfo, "ILVBRoom", "init entered", Map.empty) {
+    override def toString: String = "legal22"
+  }
+  val legalLog31 = new LegalLog(legalLogStr31, date, isKeyLog = false, LvError, "IMCore", "sso recv error", Map("errCode" -> "6012", "module" -> "sso_task")) {
+    override def toString: String = "legal31"
+  }
+  val legalLog32 = new LegalLog(legalLogStr32, date, isKeyLog = false, LvError, "IMCore", "sso recv error", Map("errCode" -> "6012", "module" -> "sso_task")) {
+    override def toString: String = "legal32"
+  }
   // 非法的日期格式
   val illegalLogStr1 = "[07-31 14:01:15][KEY][D][ILiveSDK][initSdk->init][appId:1400|accountType:118]"
   // 非法的关键路径标签
@@ -113,11 +128,23 @@ object TestLogs {
   val illegalLogStr5 = "[2017-07-31 14:01:15][DEV][I][ILVB]Room][init entered]"
   // 其他字符串
   val illegalLogStr6 = "abcde 12345   hello[] "
-  val unknownLog1 = UnknownLog(illegalLogStr1)
-  val unknownLog2 = UnknownLog(illegalLogStr2)
-  val unknownLog3 = UnknownLog(illegalLogStr3)
-  val unknownLog4 = UnknownLog(illegalLogStr4)
-  val unknownLog5 = UnknownLog(illegalLogStr5)
-  val unknownLog6 = UnknownLog(illegalLogStr6)
+  val unknownLog1 = new UnknownLog(illegalLogStr1) {
+    override def toString: String = "unknown1"
+  }
+  val unknownLog2 = new UnknownLog(illegalLogStr2) {
+    override def toString: String = "unknown2"
+  }
+  val unknownLog3 = new UnknownLog(illegalLogStr3) {
+    override def toString: String = "unknown3"
+  }
+  val unknownLog4 = new UnknownLog(illegalLogStr4) {
+    override def toString: String = "unknown4"
+  }
+  val unknownLog5 = new UnknownLog(illegalLogStr5) {
+    override def toString: String = "unknown5"
+  }
+  val unknownLog6 = new UnknownLog(illegalLogStr6) {
+    override def toString: String = "unknown6"
+  }
 }
 

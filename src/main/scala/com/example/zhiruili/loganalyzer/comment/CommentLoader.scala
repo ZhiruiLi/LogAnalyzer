@@ -37,7 +37,7 @@ object CommentLoader {
 
     new CommentLoader {
 
-      def loadCommentBindings(sdk: Sdk) = {
+      def loadCommentBindings(sdk: Sdk): Try[CommentBindings] = {
         val errPath = s"""$baseDir/$errorFileName"""
         val genPath = s"""$baseDir/$sdk/$generalFileName"""
         for {
@@ -50,24 +50,27 @@ object CommentLoader {
         } yield CommentBindings(errRes, genRes)
       }
 
-      def parseErrorBindings(rawBindings: JsObject): Try[List[((String, Int), String)]] = {
+      def parseErrorBindings(bindingObj: JsObject): Try[List[(String, List[(Int, String)])]] = {
 
-        def parseErrorModule(moduleName: String, rawErrCodeBindings: JsValue): Try[List[((String, Int), String)]] = Try {
-          rawErrCodeBindings.as[JsObject].fields.toList.map { case (codeStr, commentJsVal) =>
-            ((moduleName, codeStr.toInt), commentJsVal.as[String])
+        def parseErrorModule(errCodeBinds: JsValue): Try[Stream[(Int, String)]] = Try {
+          errCodeBinds.as[JsObject].fields.toStream.map {
+            case (codeStr, commentJsVal) => (codeStr.toInt, commentJsVal.as[String])
           }
         }
 
-        def foldModuleBindings(bindings: List[(String, JsValue)]): Try[List[((String, Int), String)]] = {
-          bindings.foldLeft(Try(List.empty[List[((String, Int), String)]])) { case (curr, (moduleName, rawBindings)) =>
-            for {
-              lst <- curr
-              res <- parseErrorModule(moduleName, rawBindings)
-            } yield res::lst
-          }.map(_.reverse.flatten)
-        }
-
-        foldModuleBindings(rawBindings.fields.toList)
+        bindingObj
+          .fields
+          .toStream
+          .map { case (moduleName, errCodeBinds) =>
+            (moduleName, parseErrorModule(errCodeBinds))
+          }
+          .foldLeft(Try(List.empty[(String, List[(Int, String)])])) { case (tryList, (moduleName, tryCodeBinds)) =>
+              for {
+                currList <- tryList
+                codeBinds <- tryCodeBinds
+              } yield (moduleName, codeBinds.toList)::currList
+          }
+          .map(_.reverse)
       }
 
       def parseGeneralBindings(rawBindings: JsObject): Try[List[(String, String)]] = Try {

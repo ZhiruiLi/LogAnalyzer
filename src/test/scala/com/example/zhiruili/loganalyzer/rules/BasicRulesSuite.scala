@@ -236,25 +236,25 @@ object BasicRulesSuite {
 
     val date: Date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2012-01-15 12:21:01")
 
-    val logSimple = new LegalLog(date, isKeyLog = true, LvDebug, "pos01", "msg01", Map.empty) {
+    val logSimple = new LegalLog("", date, isKeyLog = true, LvDebug, "pos01", "msg01", Map.empty) {
       override def toString: String = "logSimple"
     }
-    val logNotKey = new LegalLog(date, isKeyLog = false, LvDebug, "pos01", "msg01", Map.empty) {
+    val logNotKey = new LegalLog("", date, isKeyLog = false, LvDebug, "pos01", "msg01", Map.empty) {
       override def toString: String = "logNotKey"
     }
-    val logDiffPos = new LegalLog(date, isKeyLog = true, LvDebug, "pos03", "msg01", Map.empty) {
+    val logDiffPos = new LegalLog("", date, isKeyLog = true, LvDebug, "pos03", "msg01", Map.empty) {
       override def toString: String = "logDiffPos"
     }
-    val logDiffPosLetter = new LegalLog(date, isKeyLog = true, LvDebug, "pos0x", "msg01", Map.empty) {
+    val logDiffPosLetter = new LegalLog("", date, isKeyLog = true, LvDebug, "pos0x", "msg01", Map.empty) {
       override def toString: String = "logDiffPosLetter"
     }
-    val logDiffLevel = new LegalLog(date, isKeyLog = true, LvInfo, "pos01", "msg01", Map.empty) {
+    val logDiffLevel = new LegalLog("", date, isKeyLog = true, LvInfo, "pos01", "msg01", Map.empty) {
       override def toString: String = "logDiffLevel"
     }
-    val logDiffExt = new LegalLog(date, isKeyLog = true, LvDebug, "pos01", "msg01", Map("a" -> "bcd")) {
+    val logDiffExt = new LegalLog("", date, isKeyLog = true, LvDebug, "pos01", "msg01", Map("a" -> "bcd")) {
       override def toString: String = "logDiffExt"
     }
-    val logDiffExtMore = new LegalLog(date, isKeyLog = true, LvDebug, "pos01", "msg01", Map("a" -> "x12x", "b" -> "0000", "c" -> "yyyy")) {
+    val logDiffExtMore = new LegalLog("", date, isKeyLog = true, LvDebug, "pos01", "msg01", Map("a" -> "x12x", "b" -> "0000", "c" -> "yyyy")) {
       override def toString: String = "logDiffExtMore"
     }
   }

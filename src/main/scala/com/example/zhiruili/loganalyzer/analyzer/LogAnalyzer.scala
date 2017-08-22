@@ -71,7 +71,7 @@ object LogAnalyzer {
                       (problemTag: ProblemTag)
                       (logString: String): Try[List[AnalyzeResult]] = {
     for {
-      logItems <- logParser.parseLogString(logString)
+      logItems <- logParser.parseString(logString)
       res <- analyzer.analyzeLogs(problemTag)(logItems)
     } yield res
   }

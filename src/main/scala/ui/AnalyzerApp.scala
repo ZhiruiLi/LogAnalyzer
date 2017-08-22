@@ -5,6 +5,7 @@ import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, Probl
 import com.example.zhiruili.loganalyzer.logs._
 
 import scala.io.Source
+import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 import scalafx.Includes._
 import scalafx.animation.{KeyFrame, Timeline}
@@ -63,7 +64,7 @@ object AnalyzerApp extends JFXApp {
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
         println(selectedFile)
-        Try(Source.fromFile(selectedFile).mkString).flatMap(Analyzer.logParser.parseLogString) match {
+        Try(Source.fromFile(selectedFile).mkString).flatMap(Analyzer.logParser.parseString) match {
           case Success(items) =>
             logList() = items
             lbFileHint.text = selectedFile.getAbsolutePath
@@ -77,13 +78,13 @@ object AnalyzerApp extends JFXApp {
   }
 
   // 带有注释的日志项
-  val allLogsWithComment: ObjectBinding[List[(LogItem, Option[String])]] = createObjectBinding(() => {
+  val allLogsWithComment: ObjectBinding[List[(LogItem, List[String])]] = createObjectBinding(() => {
     logList().map(log => (log, Analyzer.commentLog(log)))
   }, logList)
 
   // 渲染后的日志项
   val renderedLogs: ObjectBinding[List[(LogItem, Node)]] = createObjectBinding(() => {
-    allLogsWithComment().map { case (log, optComment) => (log, Renderer.renderRichLog(log, optComment)) }
+    allLogsWithComment().map { case (log, comments) => (log, Renderer.renderRichLog(log, comments)) }
   }, allLogsWithComment)
 
   renderedLogs.onChange {
@@ -178,11 +179,25 @@ object AnalyzerApp extends JFXApp {
       logs.Utils.timeFilter(inputOriginLogStartTime.getTime, inputOriginLogEndTime.getTime)(renderedLogs())
     val newNodes: List[Node] = logsAfterFilter
       .filter {
-        case (LegalLog(_, isKey, lv, pos, msg, _), _) =>
-          val matchIsKey = filterKeyLog.forall(_ == isKey)
-          val matchLv = filterLogLevel.forall(_ == lv)
-          val matchPos = filterPosition.forall(_.findFirstIn(pos).nonEmpty)
-          val matchMsg = filterMessage.forall(_.findFirstIn(msg).nonEmpty)
+        case (LegalLog(_, _, isKey, lv, pos, msg, _), _) =>
+          def matchIsKey = filterKeyLog.forall(_ == isKey)
+          def matchLv = filterLogLevel.forall(_ == lv)
+          def matchPos = filterPosition.forall(_.findFirstIn(pos).nonEmpty)
+          def matchMsg = filterMessage.forall(_.findFirstIn(msg).nonEmpty)
+          matchIsKey && matchLv && matchPos && matchMsg
+        case (EquivocalLog(_, _, optIsKey, optLv, optPos, optMsg, _), _) =>
+          def testOptEqual[T](opt1: Option[T], opt2: Option[T]): Boolean = (for {
+            b1 <- opt1
+            b2 <- opt2
+          } yield b1 == b2).getOrElse(true)
+          def testOptRegex(optStr: Option[String], optReg: Option[Regex]): Boolean = (for {
+            str <- optStr
+            reg <- optReg
+          } yield reg.findFirstIn(str).nonEmpty).getOrElse(true)
+          def matchIsKey = testOptEqual(optIsKey, filterKeyLog)
+          def matchLv = testOptEqual(optLv, filterLogLevel)
+          def matchPos = testOptRegex(optPos, filterPosition)
+          def matchMsg = testOptRegex(optMsg, filterMessage)
           matchIsKey && matchLv && matchPos && matchMsg
         case (UnknownLog(_), _) => true
       }
@@ -206,7 +221,7 @@ object AnalyzerApp extends JFXApp {
   }
 
   // 帮助信息
-  val helpInfos: ObjectProperty[Option[List[(HelpInfo, List[LogItem])]]] = ObjectProperty(None)
+  val optHelpInfos: ObjectProperty[Option[List[(HelpInfo, List[LogItem])]]] = ObjectProperty(None)
 
   // 显示在 analyze result 区域的节点
   val analyzeResultShowNodes: ObjectProperty[List[Node]] = ObjectProperty(Nil)
@@ -218,8 +233,8 @@ object AnalyzerApp extends JFXApp {
     analyzeResultContainer.children = analyzeResultShowNodes()
   }
 
-  helpInfos.onChange {
-    val infos: List[(HelpInfo, List[LogItem])] = helpInfos() match {
+  optHelpInfos.onChange {
+    val infos: List[(HelpInfo, List[LogItem])] = optHelpInfos() match {
       case None => Nil
       case Some(Nil) => List((HelpInfo("未分析出可能原因", Some("https://www.qcloud.com/document/product/268/7752")), Nil))
       case Some(helps) => helps
@@ -257,7 +272,7 @@ object AnalyzerApp extends JFXApp {
       Analyzer.analyzeLog(platform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
           val helpInfoList = resultList.map(res => (res.helpInfo, res.relatedLogs))
-          helpInfos() = Some(helpInfoList)
+          optHelpInfos() = Some(helpInfoList)
         case Failure(thw) =>
           setError(thw.getMessage)
       }
@@ -266,7 +281,7 @@ object AnalyzerApp extends JFXApp {
 
   val btnClearAnalyzeResult = new Button {
     text = "清空帮助信息"
-    onAction = { _: ActionEvent => helpInfos() = None }
+    onAction = { _: ActionEvent => optHelpInfos() = None }
   }
 
   // --------------- 主界面 ---------------------
@@ -298,7 +313,7 @@ object AnalyzerApp extends JFXApp {
         children = Seq(
           new Label {
             text = "帮助信息"
-            managed <== createBooleanBinding(() => helpInfos().nonEmpty, helpInfos)
+            managed <== createBooleanBinding(() => optHelpInfos().nonEmpty, optHelpInfos)
             visible <== managed
             style = "-fx-font-size: 18pt"
           },
