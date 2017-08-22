@@ -1,38 +1,39 @@
 package com.example.zhiruili.loganalyzer.logs
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 trait LogParserDelegateChain extends LogParser {
 
   def basicParser: LogParser
   def delegateParsers: List[LogParser]
 
-  def delegateParsing(logStr: String, parsers: List[LogParser]): Option[List[LogItem]] = {
+  def delegateParsing(line: String, parsers: List[LogParser]): Option[LogItem] = {
     parsers match {
       case Nil => None
-      case parser::remain => parser.parseString(logStr) match {
-        case Success(logs) => Some(logs)
-        case _ => delegateParsing(logStr, remain)
+      case parser::remain => parser.parseLine(line) match {
+        case Failure(_) => delegateParsing(line, remain)
+        case Success(UnknownLog(_)) => delegateParsing(line, remain)
+        case Success(log) => Some(log)
       }
     }
   }
 
-  def parseUnknown(unknownLog: UnknownLog): List[LogItem] = {
-    delegateParsing(unknownLog.originalLog, delegateParsers) match {
-      case Some(logs) => logs
-      case None => List(unknownLog)
-    }
+  def parseUnknown(unknownLog: UnknownLog): LogItem = {
+    delegateParsing(unknownLog.originalLog, delegateParsers).getOrElse(unknownLog)
   }
 
-  override def parseString(logString: String): Try[List[LogItem]] = {
-    basicParser
-      .parseString(logString)
-      .map { logs =>
-        logs.view.flatMap {
-          case log@UnknownLog(_) =>
-            parseUnknown(log)
-          case log => List(log)
-        }.toList
-      }
+  override def parseLine(line: String): Try[LogItem] = {
+    basicParser.parseLine(line).map {
+      case log: UnknownLog => parseUnknown(log)
+      case log => log
+    }
   }
+}
+
+object LogParserDelegateChain {
+  def apply(basicLogParser: LogParser, delegateChain: List[LogParser]): LogParserDelegateChain =
+    new LogParserDelegateChain {
+      val basicParser: LogParser = basicLogParser
+      val delegateParsers: List[LogParser] = delegateChain
+    }
 }

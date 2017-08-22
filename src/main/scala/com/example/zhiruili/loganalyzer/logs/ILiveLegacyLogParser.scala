@@ -10,17 +10,27 @@ object ILiveLegacyLogParser extends LogParser {
 
   type ThreadId = Int
   type Position = String
-  type ModuleOrKeyTag = String
   type Message = String
 
-  def parseLine(line: String) = Try {
+  val threadIdTag = "threadId"
+
+  /**
+    * 解析遗留 iLive SDK 日志
+    * 非关键路径日志格式为：
+    * timestamp | log level | thread ID | position | message
+    * 关键路径日志格式为：
+    * timestamp | log level | thread ID | position | "Key_Procedure" | message
+    *
+    * @param line 一行日志
+    * @return 一个日志项，可能出错
+    */
+  def parseLine(line: String): Try[LogItem] = Try {
     ILiveLegacyLogParsers.parseAll(ILiveLegacyLogParsers.potentialLog, line).map {
-      case (time, lv, tId, pos, modOrKey, msg) =>
-        val (optIsKey, optModule) = if (modOrKey == "Key_Procedure") (Some(true), None) else (Some(false), Some(modOrKey))
+      case (time, lv, tId, pos, isKey, msg) =>
         val optErrCode = findErrorCode(msg)
         val actualLv = optErrCode.map(_ => LvError).getOrElse(lv)
-        val extMap = Map("threadId" -> tId.toString, "module" -> optModule.getOrElse(""))
-        EquivocalLog(line, Some(time), optIsKey, Some(actualLv), Some(pos), Some(msg), extMap)
+        val ext = (threadIdTag -> tId.toString)::optErrCode.map(code => LogItem.errCodeTag -> code.toString).toList
+        EquivocalLog(line, Some(time), Some(isKey), Some(actualLv), Some(pos), Some(msg), ext.toMap)
     }.getOrElse(UnknownLog(line))
   }
 
@@ -57,27 +67,9 @@ object ILiveLegacyLogParser extends LogParser {
     }
 
     /**
-      * 解析是否是关键路径日志，取值仅为 KEY 或 DEV
+      * 解析打印日志的位置，任意不包含竖线的字符串
       */
-    def isKeyLog: Parser[Boolean] = ("KEY" | "DEV") ^^ {
-      case "KEY" => true
-      case "DEV" => false
-    }
-
-    /**
-      * 任意不包含竖线的字符串
-      */
-    def noBarString: Parser[String] = """[^\|]+""".r ^^ (_.trim)
-
-    /**
-      * 解析打印日志的位置
-      */
-    def position: Parser[String] = noBarString
-
-    /**
-      * 解析日志打印模块，关键日志解析也在此解析
-      */
-    def module: Parser[String] = noBarString
+    def position: Parser[String] = """[^\|]+""".r ^^ (_.trim)
 
     /**
       * 解析日志信息，任意字符串
@@ -90,14 +82,21 @@ object ILiveLegacyLogParser extends LogParser {
     def threadId: Parser[Int] = """\d+""".r ^^ (_.toInt)
 
     /**
+      * 解析是否是关键路径日志
+      */
+    def isKeyProcedure: Parser[Boolean] = "Key_Procedure" ^^ (_ => true)
+
+    /**
       * 解析模糊日志
       */
-    def potentialLog: Parser[(Date, LogLevel, ThreadId, Position, ModuleOrKeyTag, Message)] = {
+    def potentialLog: Parser[(Date, LogLevel, ThreadId, Position, Boolean, Message)] = {
 
       def bSep[T](parser: Parser[T]): Parser[T] = parser <~ "|"
 
-      bSep(timestamp) ~ bSep(level) ~ bSep(threadId) ~ bSep(position) ~ bSep(module) ~ message ^^ {
-        case time ~ lv ~ tId ~ pos ~ mod ~ msg => (time, lv, tId, pos, mod, msg)
+      def tail: Parser[~[Boolean, String]] = (bSep(isKeyProcedure) ~ message) | (success(false) ~ message)
+
+      bSep(timestamp) ~ bSep(level) ~ bSep(threadId) ~ bSep(position) ~ tail ^^ {
+        case time ~ lv ~ tId ~ pos ~ (isKey ~ msg) => (time, lv, tId, pos, isKey, msg)
       }
     }
   }
