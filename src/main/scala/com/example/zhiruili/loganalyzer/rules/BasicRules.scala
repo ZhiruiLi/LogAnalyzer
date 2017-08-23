@@ -26,15 +26,13 @@ object BasicRules {
                        optMsgRegex: Option[String],
                        extMsgRegex: Map[String, String]) extends Rule {
 
-    private def testOptEqual[T](opt1: Option[T], opt2: Option[T]): Boolean = (for {
-      b1 <- opt1
-      b2 <- opt2
-    } yield b1 == b2).getOrElse(true)
+    import com.example.zhiruili.utils
 
-    private def testOptRegex(optStr: Option[String], optReg: Option[String]): Boolean = (for {
-      str <- optStr
-      reg <- optReg
-    } yield str.matches(reg)).getOrElse(true)
+    private def testOptEqual[T](opt1: Option[T], opt2: Option[T]): Boolean =
+      utils.Utils.testIfDefined(opt1, opt2, (a: T, b: T) => a == b)
+
+    private def testOptRegex(optStr: Option[String], optReg: Option[String]): Boolean =
+      utils.Utils.testIfDefined(optStr, optReg, (str: String, reg: String) => str.matches(reg))
 
     override def matchLogItems(logs: List[LogItem]): MatchResult = logs match {
       case Nil => MatchFailure(Nil, Nil, Nil, Nil)
@@ -44,10 +42,7 @@ object BasicRules {
           def matchLv = optLevel.forall(_ == lv)
           def matchPos = optPosRegex.forall(pos.matches)
           def matchMsg = optMsgRegex.forall(msg.matches)
-          def matchExt = extMsgRegex.forall {
-            // TODO extMsgRegex 的值部分的类型改为 Option[String]，并在这里和下面处理匹配
-            case (key, value) => ext.get(key).exists(_.matches(value))
-          }
+          def matchExt = extMsgRegex.forall { case (key, value) => ext.get(key).exists(_.matches(value)) }
           if (matchIsKey && matchLv && matchPos && matchMsg && matchExt) {
             MatchSuccess(List(log), Nil, remainLogs)
           } else {
@@ -58,9 +53,7 @@ object BasicRules {
           def matchLv = testOptEqual(optLv, optLevel)
           def matchPos = testOptRegex(optPos, optPosRegex)
           def matchMsg = testOptRegex(optMsg, optMsgRegex)
-          def matchExt = extMsgRegex.forall {
-            case (key, value) => ext.get(key).exists(_.matches(value))
-          }
+          def matchExt = extMsgRegex.forall { case (key, value) => ext.get(key).exists(_.matches(value)) }
           if (matchIsKey && matchLv && matchPos && matchMsg && matchExt) {
             MatchSuccess(List(log), Nil, remainLogs)
           } else {
