@@ -6,7 +6,6 @@ import com.example.zhiruili.loganalyzer.logs._
 import com.example.zhiruili.utils.Utils._
 
 import scala.io.Source
-import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}
 import scalafx.Includes._
 import scalafx.animation.{KeyFrame, Timeline}
@@ -117,7 +116,7 @@ object AnalyzerApp extends JFXApp {
   cbFilterIsKeyLog.selectionModel().selectedIndexProperty().onChange {
     setFilterExpired()
   }
-  val filterOptIsKeyLog: Option[Boolean] = cbFilterIsKeyLog.selectionModel().getSelectedIndex match {
+  def filterOptIsKeyLog: Option[Boolean] = cbFilterIsKeyLog.selectionModel().getSelectedIndex match {
     case 0 => None
     case 1 => Some(true)
     case 2 => Some(false)
@@ -157,13 +156,14 @@ object AnalyzerApp extends JFXApp {
 
   // 输出结果是否包含无法解析的日志
   val cbIncludeUnknown = new CheckBox("结果包含无法解析的日志") { onAction = { _: ActionEvent => setFilterExpired() } }
+  def includeUnknown: Boolean = cbIncludeUnknown.selected()
 
   // 过滤时间区间
   val inputOriginLogStartTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
   val inputOriginLogEndTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
 
+  // 更新日志浏览区域的日志内容
   def updateOriginLogList(): Unit = {
-    val includeUnknown = cbIncludeUnknown.selected()
     val logsAfterFilter =
       logs.Utils.timeFilter(inputOriginLogStartTime.getTime, inputOriginLogEndTime.getTime)(renderedLogs())
     val matchRegex = (str: String, regexStr: String) => regexStr.r.findFirstIn(str).nonEmpty
@@ -190,6 +190,7 @@ object AnalyzerApp extends JFXApp {
     originalLogShowNodes() = newNodes
   }
 
+  // 监视日志过滤选项的刷新
   val refreshChecker: (ActionEvent) => Unit = { _ =>
     if (filterIsUpdated()) {
       filterIsUpdated() = false
