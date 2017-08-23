@@ -1,4 +1,4 @@
-package ui
+package com.example.zhiruili.loganalyzer.ui
 
 import java.text.SimpleDateFormat
 import java.util.Date

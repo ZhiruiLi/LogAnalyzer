@@ -1,4 +1,4 @@
-package ui
+package com.example.zhiruili.loganalyzer.ui
 
 import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer._

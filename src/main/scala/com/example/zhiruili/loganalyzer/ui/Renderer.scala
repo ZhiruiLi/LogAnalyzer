@@ -1,4 +1,4 @@
-package ui
+package com.example.zhiruili.loganalyzer.ui
 
 import scalafx.Includes._
 import java.awt.Desktop
