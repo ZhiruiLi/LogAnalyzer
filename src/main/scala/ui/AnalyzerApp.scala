@@ -204,12 +204,13 @@ object AnalyzerApp extends JFXApp {
     originalLogShowNodes() = newNodes
   }
 
-  val filterChecker = Timeline(KeyFrame(500.ms, "", { _: ActionEvent =>
+  val refreshChecker: (ActionEvent) => Unit = { _ =>
     if (filterIsUpdated()) {
       filterIsUpdated() = false
       updateOriginLogList()
     }
-  }))
+  }
+  val filterChecker = Timeline(KeyFrame(500.ms, "", refreshChecker))
   filterChecker.setCycleCount(Timeline.Indefinite)
   filterChecker.play()
 
