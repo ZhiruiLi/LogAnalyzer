@@ -9,6 +9,10 @@ sealed trait LogLevel {
   protected def levelVal: Int
   def >(that: LogLevel): Boolean = levelVal > that.levelVal
   def <(that: LogLevel): Boolean = levelVal < that.levelVal
+  def >=(that: LogLevel): Boolean = levelVal >= that.levelVal
+  def <=(that: LogLevel): Boolean = levelVal <= that.levelVal
+  def ==(that: LogLevel): Boolean = levelVal == that.levelVal
+  def !=(that: LogLevel): Boolean = levelVal != that.levelVal
 }
 case object LvVerbose extends LogLevel { protected val levelVal = 0 }
 case object LvDebug extends LogLevel { protected val levelVal = 1 }

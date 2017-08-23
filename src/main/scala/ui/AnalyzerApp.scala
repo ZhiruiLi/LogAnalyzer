@@ -3,6 +3,7 @@ package ui
 import com.example.zhiruili.loganalyzer._
 import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer.logs._
+import com.example.zhiruili.utils.Utils._
 
 import scala.io.Source
 import scala.util.matching.Regex
@@ -33,11 +34,11 @@ object AnalyzerApp extends JFXApp {
 
   // --------------- 公用 ------------------------
 
-  val choicePlatform = new ChoiceBox(ObservableBuffer("Android", "iOS"))
-  choicePlatform.selectionModel().selectFirst()
+  val cbFilterPlatform = new ChoiceBox(ObservableBuffer("Android", "iOS"))
+  cbFilterPlatform.selectionModel().selectFirst()
   val platforms = Vector(PlatformAndroid, PlatformIOS)
 
-  def currentPlatform: Platform = platforms(choicePlatform.selectionModel().getSelectedIndex)
+  def currentPlatform: Platform = platforms(cbFilterPlatform.selectionModel().getSelectedIndex)
 
   // --------------- 原始日志信息 ------------------
 
@@ -110,95 +111,80 @@ object AnalyzerApp extends JFXApp {
     filterIsUpdated() = true
   }
 
-  val strNotRestraint: String = "无约束"
-
-  val choiceIsKeyLog = new ChoiceBox(ObservableBuffer(strNotRestraint , "是", "否"))
-  choiceIsKeyLog.selectionModel().selectFirst()
-  choiceIsKeyLog.selectionModel().selectedIndexProperty().onChange {
+  // 过滤关键日志
+  val cbFilterIsKeyLog = new ChoiceBox(ObservableBuffer("无约束", "是", "否"))
+  cbFilterIsKeyLog.selectionModel().selectFirst()
+  cbFilterIsKeyLog.selectionModel().selectedIndexProperty().onChange {
     setFilterExpired()
   }
-
-  val choiceLogLevel = new ChoiceBox(ObservableBuffer(strNotRestraint, "Verbose", "Debug", "Info", "Warn", "Error"))
-  choiceLogLevel.selectionModel().selectFirst()
-  choiceLogLevel.selectionModel().selectedIndexProperty().onChange {
-    setFilterExpired()
+  val filterOptIsKeyLog: Option[Boolean] = cbFilterIsKeyLog.selectionModel().getSelectedIndex match {
+    case 0 => None
+    case 1 => Some(true)
+    case 2 => Some(false)
   }
 
-  val inputMessage = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
-  val inputPosition = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
-  val cbIsRegex = new CheckBox("正则匹配") { onAction = { _: ActionEvent => setFilterExpired() } }
+  // 过滤最低等级日志
+  val cbMinLogLevel = new ChoiceBox(ObservableBuffer("Verbose", "Debug", "Info", "Warn", "Error"))
+  cbMinLogLevel.selectionModel().selectFirst()
+  cbMinLogLevel.selectionModel().selectedIndexProperty().onChange {
+    setFilterExpired()
+  }
+  def filterMinLogLevel: LogLevel = cbMinLogLevel.selectionModel().getSelectedIndex match {
+    case 0 => LvVerbose
+    case 1 => LvDebug
+    case 2 => LvInfo
+    case 3 => LvWarn
+    case 4 => LvError
+  }
+
+  // 日志信息过滤输入框
+  val tfFilterMessage: TextField = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
+  def filterMessage: Option[String] = tfFilterMessage.text() match {
+    case "" => None
+    case str => Some(if (isStrictMode) str else createFuzzyRegex(str))
+  }
+
+  // 日志打印位置过滤输入框
+  val tfFilterPosition: TextField = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
+  def filterPosition: Option[String] = tfFilterPosition.text() match {
+    case "" => None
+    case str => Some(if (isStrictMode) str else createFuzzyRegex(str))
+  }
+
+  // 是否采用正则匹配，未选择则为模糊匹配
+  val cbIsStrictMode = new CheckBox("严格匹配(正则)") { onAction = { _: ActionEvent => setFilterExpired() } }
+  def isStrictMode: Boolean = cbIsStrictMode.selected()
+
+  // 输出结果是否包含无法解析的日志
   val cbIncludeUnknown = new CheckBox("结果包含无法解析的日志") { onAction = { _: ActionEvent => setFilterExpired() } }
+
+  // 过滤时间区间
   val inputOriginLogStartTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
   val inputOriginLogEndTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
 
-  val regexChars: Set[Char] = "\\^$.[]*+?{}|-,>".toSet
-
   def updateOriginLogList(): Unit = {
-    val filterKeyLog = choiceIsKeyLog.selectionModel().getSelectedIndex match {
-      case 0 => None
-      case 1 => Some(true)
-      case 2 => Some(false)
-    }
-    val filterLogLevel = choiceLogLevel.selectionModel().getSelectedIndex match {
-      case 0 => None
-      case 1 => Some(LvVerbose)
-      case 2 => Some(LvDebug)
-      case 3 => Some(LvInfo)
-      case 4 => Some(LvWarn)
-      case 5 => Some(LvError)
-    }
-    val isRegex = cbIsRegex.selected()
-    def createRegex(str: String) = str.trim match {
-      case "" => None
-      case s =>
-        Some(
-          if (isRegex) {
-            s
-          } else {
-            s.flatMap { c =>
-              if (c.isLetter)
-                s"[${c.toUpper}${c.toLower}]"
-              else if (c.isSpaceChar)
-                s".*"
-              else if (regexChars(c))
-                s"\\$c"
-              else s"$c"
-            }
-          }
-        ).map(_.r)
-    }
-    val filterPosition = createRegex(inputPosition.text())
-    val filterMessage = createRegex(inputMessage.text())
     val includeUnknown = cbIncludeUnknown.selected()
     val logsAfterFilter =
       logs.Utils.timeFilter(inputOriginLogStartTime.getTime, inputOriginLogEndTime.getTime)(renderedLogs())
-
-    def testOptEqual[T](opt1: Option[T], opt2: Option[T]): Boolean = (for {
-      b1 <- opt1
-      b2 <- opt2
-    } yield b1 == b2).getOrElse(true)
-
-    def testOptRegex(optStr: Option[String], optReg: Option[Regex]): Boolean = (for {
-      str <- optStr
-      reg <- optReg
-    } yield reg.findFirstIn(str).nonEmpty).getOrElse(true)
-
+    val matchRegex = (str: String, regexStr: String) => regexStr.r.findFirstIn(str).nonEmpty
     val newNodes: List[Node] = logsAfterFilter
       .filter {
         case (LegalLog(_, _, isKey, lv, pos, msg, _), _) =>
-          def matchIsKey = filterKeyLog.forall(_ == isKey)
-          def matchLv = filterLogLevel.forall(_ == lv)
-          def matchPos = filterPosition.forall(_.findFirstIn(pos).nonEmpty)
-          def matchMsg = filterMessage.forall(_.findFirstIn(msg).nonEmpty)
+          def matchIsKey = filterOptIsKeyLog.forall(_ == isKey)
+          def matchLv = filterMinLogLevel <= lv
+          def matchPos = filterPosition.forall(_.r.findFirstIn(pos).nonEmpty)
+          def matchMsg = filterMessage.forall(_.r.findFirstIn(msg).nonEmpty)
           matchIsKey && matchLv && matchPos && matchMsg
         case (EquivocalLog(_, _, optIsKey, optLv, optPos, optMsg, _), _) =>
-          def matchIsKey = testOptEqual(optIsKey, filterKeyLog)
-          def matchLv = testOptEqual(optLv, filterLogLevel)
-          def matchPos = testOptRegex(optPos, filterPosition)
-          def matchMsg = testOptRegex(optMsg, filterMessage)
+          def matchIsKey = testIfDefined(optIsKey, filterOptIsKeyLog, (b: Boolean, fB: Boolean) => b == fB)
+          def matchLv = optLv.forall(_ >= filterMinLogLevel)
+          def matchPos = testIfDefined(optPos, filterPosition, matchRegex)
+          def matchMsg = testIfDefined(optMsg, filterMessage, matchRegex)
           matchIsKey && matchLv && matchPos && matchMsg
         case (UnknownLog(log), _) =>
-          includeUnknown && testOptRegex(Some(log), filterPosition) && testOptRegex(Some(log), filterMessage)
+          includeUnknown &&
+            testIfDefined(Some(log), filterPosition, matchRegex) &&
+            testIfDefined(Some(log), filterMessage, matchRegex)
       }
       .map(_._2)
     originalLogShowNodes() = newNodes
@@ -288,7 +274,7 @@ object AnalyzerApp extends JFXApp {
       children = Seq(
         new FlowPane {
           hgap = 10
-          children = Seq(Label("运行平台"), choicePlatform, btnLoadFile, lbFileHint)
+          children = Seq(Label("运行平台"), cbFilterPlatform, btnLoadFile, lbFileHint)
         },
         new FlowPane {
           hgap = 10
@@ -320,11 +306,11 @@ object AnalyzerApp extends JFXApp {
             hgap = 10
             vgap = 5
             children = Seq(
-              Label("是否关键日志"), choiceIsKeyLog,
-              Label("日志等级"), choiceLogLevel,
-              Label("日志信息"), inputMessage,
-              Label("打印位置"), inputPosition,
-              cbIsRegex,
+              Label("是否关键日志"), cbFilterIsKeyLog,
+              Label("最低日志等级"), cbMinLogLevel,
+              Label("日志信息"), tfFilterMessage,
+              Label("打印位置"), tfFilterPosition,
+              cbIsStrictMode,
               cbIncludeUnknown,
               Label("筛选时间区间 从"), inputOriginLogStartTime, Label("至"), inputOriginLogEndTime
             )
