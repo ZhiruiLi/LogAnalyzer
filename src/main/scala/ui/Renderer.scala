@@ -66,11 +66,11 @@ object Renderer {
 
   def levelColor(lv: LogLevel): Color = levelColorMap.getOrElse(lv, defaultColor)
 
-  def coloredText(txt: String, color: Color) = new Text {
+  def coloredText(txt: String, color: Color, fontSize: Int) = new Text {
     text = txt
     fill = color
     style = "-fx-font-family: Menlo, Consolas, Monospace;" +
-            "-fx-font-size: 10pt;"
+            s"-fx-font-size: ${fontSize}pt;"
   }
 
   def renderRichLog(logItem: LogItem, comments: List[String]): Node = logItem match {
@@ -78,14 +78,18 @@ object Renderer {
       val color = levelColor(lv)
       val logStr = Formatter.formatLegalLog(log)
       val text = s"${comments.mkString("\n")}\n  $logStr"
-      coloredText(text, color)
+      coloredText(text, color, 10)
     case log@EquivocalLog(originalLog, _, _, optLv, _, _, _) =>
       val color = optLv.map(levelColor).getOrElse(defaultColor)
       val logStr = Formatter.formatEquivocalLog(log)
-      val text = s"${comments.mkString("\n")}\n $logStr\n  原始日志：$originalLog"
-      coloredText(text, color)
+      val box = new VBox {
+        children = comments.map(str => coloredText(str, color, 10))
+      }
+      box.children += coloredText(logStr, color, 10)
+      box.children += coloredText(s"    原始日志：$originalLog", defaultColor, 9)
+      box
     case log@UnknownLog(_) =>
-      coloredText(Formatter.formatUnknownLog(log), defaultColor)
+      coloredText(Formatter.formatUnknownLog(log), defaultColor, 10)
   }
 
   def renderHelpInfo(helpInfo: HelpInfo, richLogs: List[(LogItem, List[String])]): Node = {

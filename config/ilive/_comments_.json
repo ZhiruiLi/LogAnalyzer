@@ -20,7 +20,7 @@
     "stopContext": "销毁 AV 上下文",
     "clearUserView->enter": "清理用户 View",
     "quitRoom": "退出房间",
-    "quitIMGroup": "推出 IM 聊天组",
+    "quitIMGroup": "退出 IM 聊天组",
     "quitAVRoom->enter": "开始退出 AV 房间",
     "quitAVRoom->onSuccess": "成功退出 AV 房间",
     "enterAVRoom->enter": "开始进入 AV 房间",
@@ -31,6 +31,8 @@
   "fuzzy": {
     "initSdk\\-\\>init appid": "初始化 SDK",
     "ILVB-Room\\|init entered": "初始化房间",
+    "ILVB-Room\\|onDestory": "销毁房间",
+    "clearRoomRes": "清理房间资源",
     "init root view": "设置渲染层根视图",
     "init sub views": "设置渲染层子视图",
     "start create room": "创建房间",
@@ -38,6 +40,7 @@
     "enter av room complete": "成功进入 AV 房间",
     "joinRoom success": "Call SDK 加入房间成功",
     "initHeartBeat": "初始化 Call SDK 心跳",
+    "removeHeartBeat": "移除 Call SDK 心跳",
     "\\-\\>eCallIncoming": "Call SDK 状态转换：收到通话请求",
     "\\-\\>eCallEstablish": "Call SDK 状态转换：通话建立成功",
     "\\-\\>eCallEnd": "Call SDK 状态转换：通话结束",
@@ -49,6 +52,10 @@
     "requestRemoteVideo id": "获取 server 成员上线回调",
     "strart enableCamera": "尝试打开摄像头",
     "enable camera id\\:\\d+\\/true": "摄像头开启成功",
-    "enable camera id\\:\\d+\\/false": "摄像头开启失败"
+    "enable camera id\\:\\d+\\/false": "摄像头开启失败",
+    "enableMic true, result:true": "打开麦克风成功",
+    "enableMic false, result:false": "关闭麦克风成功",
+    "enableMic true, result:false": "打开麦克风失败",
+    "enableMic false, result:true": "关闭麦克风失败"
   }
 }

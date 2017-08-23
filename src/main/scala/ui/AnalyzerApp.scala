@@ -116,24 +116,10 @@ object AnalyzerApp extends JFXApp {
     setFilterExpired()
   }
 
-  val inputMessage = new TextField {
-    onKeyTyped = { _: KeyEvent =>
-      setFilterExpired()
-    }
-  }
-
-  val inputPosition = new TextField {
-    onKeyTyped = { _: KeyEvent =>
-      setFilterExpired()
-    }
-  }
-
-  val cbIsRegex = new CheckBox("正则匹配") {
-    onAction = { _: ActionEvent =>
-      setFilterExpired()
-    }
-  }
-
+  val inputMessage = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
+  val inputPosition = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
+  val cbIsRegex = new CheckBox("正则匹配") { onAction = { _: ActionEvent => setFilterExpired() } }
+  val cbIncludeUnknown = new CheckBox("结果包含无法解析的日志") { onAction = { _: ActionEvent => setFilterExpired() } }
   val inputOriginLogStartTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
   val inputOriginLogEndTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
 
@@ -175,8 +161,20 @@ object AnalyzerApp extends JFXApp {
     }
     val filterPosition = createRegex(inputPosition.text())
     val filterMessage = createRegex(inputMessage.text())
+    val includeUnknown = cbIncludeUnknown.selected()
     val logsAfterFilter =
       logs.Utils.timeFilter(inputOriginLogStartTime.getTime, inputOriginLogEndTime.getTime)(renderedLogs())
+
+    def testOptEqual[T](opt1: Option[T], opt2: Option[T]): Boolean = (for {
+      b1 <- opt1
+      b2 <- opt2
+    } yield b1 == b2).getOrElse(true)
+
+    def testOptRegex(optStr: Option[String], optReg: Option[Regex]): Boolean = (for {
+      str <- optStr
+      reg <- optReg
+    } yield reg.findFirstIn(str).nonEmpty).getOrElse(true)
+
     val newNodes: List[Node] = logsAfterFilter
       .filter {
         case (LegalLog(_, _, isKey, lv, pos, msg, _), _) =>
@@ -186,20 +184,13 @@ object AnalyzerApp extends JFXApp {
           def matchMsg = filterMessage.forall(_.findFirstIn(msg).nonEmpty)
           matchIsKey && matchLv && matchPos && matchMsg
         case (EquivocalLog(_, _, optIsKey, optLv, optPos, optMsg, _), _) =>
-          def testOptEqual[T](opt1: Option[T], opt2: Option[T]): Boolean = (for {
-            b1 <- opt1
-            b2 <- opt2
-          } yield b1 == b2).getOrElse(true)
-          def testOptRegex(optStr: Option[String], optReg: Option[Regex]): Boolean = (for {
-            str <- optStr
-            reg <- optReg
-          } yield reg.findFirstIn(str).nonEmpty).getOrElse(true)
           def matchIsKey = testOptEqual(optIsKey, filterKeyLog)
           def matchLv = testOptEqual(optLv, filterLogLevel)
           def matchPos = testOptRegex(optPos, filterPosition)
           def matchMsg = testOptRegex(optMsg, filterMessage)
           matchIsKey && matchLv && matchPos && matchMsg
-        case (UnknownLog(_), _) => true
+        case (UnknownLog(log), _) =>
+          includeUnknown && testOptRegex(Some(log), filterPosition) && testOptRegex(Some(log), filterMessage)
       }
       .map(_._2)
     originalLogShowNodes() = newNodes
@@ -331,6 +322,7 @@ object AnalyzerApp extends JFXApp {
               Label("日志信息"), inputMessage,
               Label("打印位置"), inputPosition,
               cbIsRegex,
+              cbIncludeUnknown,
               Label("筛选时间区间 从"), inputOriginLogStartTime, Label("至"), inputOriginLogEndTime
             )
           }
