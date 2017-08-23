@@ -29,9 +29,26 @@
     "onNewMessages": "收到新消息"
   },
   "fuzzy": {
-    "initSdk": "初始化 SDK",
+    "initSdk\\-\\>init appid": "初始化 SDK",
     "ILVB-Room\\|init entered": "初始化房间",
-    "ILVB-Room\\|init root view": "设置渲染层",
-    "renderVideoView": "渲染视频"
+    "init root view": "设置渲染层根视图",
+    "init sub views": "设置渲染层子视图",
+    "start create room": "创建房间",
+    "createRoom\\-\\>im room ok": "直播聊天室创建完毕",
+    "enter av room complete": "成功进入 AV 房间",
+    "joinRoom success": "Call SDK 加入房间成功",
+    "initHeartBeat": "初始化 Call SDK 心跳",
+    "\\-\\>eCallIncoming": "Call SDK 状态转换：收到通话请求",
+    "\\-\\>eCallEstablish": "Call SDK 状态转换：通话建立成功",
+    "\\-\\>eCallEnd": "Call SDK 状态转换：通话结束",
+    "\\-\\>eCallIdle": "Call SDK 状态转换：闲置状态",
+    "\\-\\>eCallEnter": "Call SDK 状态转换：发起通话",
+    "\\-\\>eCallWait": "Call SDK 状态转换：等待对方接听",
+    "onEndpointsUpdateInfo myself id has camera": "Server 回调用户上线",
+    "renderVideoView": "渲染视频",
+    "requestRemoteVideo id": "获取 server 成员上线回调",
+    "strart enableCamera": "尝试打开摄像头",
+    "enable camera id\\:\\d+\\/true": "摄像头开启成功",
+    "enable camera id\\:\\d+\\/false": "摄像头开启失败"
   }
 }
