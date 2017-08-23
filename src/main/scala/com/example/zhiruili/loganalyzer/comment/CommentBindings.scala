@@ -8,10 +8,6 @@ trait CommentBindings {
   def distinctBindings: Map[String, String]
   def fuzzyBindings: Iterable[(Regex, String)]
 
-//    errorBindings
-
-//  distinctBindings.toMap
-
   def matchError(code: Int, module: String): Option[String] = errorBindings.get(module).flatMap(_.get(code))
 
   def matchErrorCode(code: Int): List[String] = errorBindings.flatMap { case (_, map) => map.get(code) }.toList

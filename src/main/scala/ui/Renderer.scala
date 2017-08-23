@@ -77,8 +77,11 @@ object Renderer {
     case log@LegalLog(_, _, _, lv, _, _, _) =>
       val color = levelColor(lv)
       val logStr = Formatter.formatLegalLog(log)
-      val text = s"${comments.mkString("\n")}\n  $logStr"
-      coloredText(text, color, 10)
+      val box = new VBox {
+        children = comments.map(str => coloredText(str, color, 10))
+      }
+      box.children += coloredText(logStr, color, 10)
+      box
     case log@EquivocalLog(originalLog, _, _, optLv, _, _, _) =>
       val color = optLv.map(levelColor).getOrElse(defaultColor)
       val logStr = Formatter.formatEquivocalLog(log)

@@ -1,7 +1,7 @@
 package ui
 
 import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{Problem, ProblemTag}
-import com.example.zhiruili.loganalyzer.{ILiveSdk, Platform, Sdk}
+import com.example.zhiruili.loganalyzer._
 import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
 import com.example.zhiruili.loganalyzer.analyzer.{ConfigLoader, LogAnalyzerLoader}
 import com.example.zhiruili.loganalyzer.analyzer.config.FileConfigLoader
@@ -27,8 +27,12 @@ object Analyzer {
   type ErrBindings = Map[String, Map[Int, String]]
   type GenBindings = Map[String, String]
 
-  val commentBindings: CommentBindings =
-    CommentLoader.ofFile(configBaseDir, errorCommentFileName, generalCommentFileName).loadCommentBindings(currentSdk).get
+  val commentBindings: Map[Platform, CommentBindings] = {
+    val loader = CommentLoader.ofFile(configBaseDir, errorCommentFileName, generalCommentFileName)
+    Map(
+      PlatformAndroid -> loader.loadCommentBindings(currentSdk, PlatformAndroid).get,
+      PlatformIOS -> loader.loadCommentBindings(currentSdk, PlatformIOS).get)
+  }
 
   def loadProblemList: List[Problem] = configLoader.loadProblemList(currentSdk).get
 
@@ -42,16 +46,16 @@ object Analyzer {
     } yield res
   }
 
-  def commentLog(logItem: LogItem): List[String] = logItem match {
+  def commentLog(logItem: LogItem, platform: Platform): List[String] = logItem match {
     case LegalLog(_, _, _, lv, _, msg, ext) =>
       val errComment = for {
         _ <- if (lv == LvError) Some(Unit) else None
         errCodeStr <- ext.get(LogItem.errCodeTag)
         errCode <- Try(errCodeStr.toInt).toOption
         errModule <- ext.get(LogItem.errModuleTag)
-        comment <- commentBindings.matchError(errCode, errModule)
+        comment <- commentBindings.get(platform).flatMap(_.matchError(errCode, errModule))
       } yield comment
-      (errComment, commentBindings.matchDistinctMessage(msg)) match {
+      (errComment, commentBindings.get(platform).flatMap(_.matchDistinctMessage(msg))) match {
         case (None, None) => Nil
         case (Some(com), None) => List(com)
         case (None, Some(com)) => List(com)
@@ -63,8 +67,12 @@ object Analyzer {
         if lv == LvError
         errCodeStr <- ext.get(LogItem.errCodeTag)
         errCode <- Try(errCodeStr.toInt).toOption
-      } yield commentBindings.matchErrorCode(errCode)).getOrElse(Nil)
-      val genComment = optMsg.map(commentBindings.matchFuzzyMessage).getOrElse(Nil)
+        binding <- commentBindings.get(platform)
+      } yield binding.matchErrorCode(errCode)).getOrElse(Nil)
+      val genComment = (for {
+        msg <- optMsg
+        binding <- commentBindings.get(platform)
+      } yield binding.matchFuzzyMessage(msg)).getOrElse(Nil)
       errComments ++ genComment
     case UnknownLog(_) => Nil
   }

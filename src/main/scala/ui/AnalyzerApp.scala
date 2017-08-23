@@ -31,6 +31,14 @@ object AnalyzerApp extends JFXApp {
 
   import Implicits._
 
+  // --------------- 公用 ------------------------
+
+  val choicePlatform = new ChoiceBox(ObservableBuffer("Android", "iOS"))
+  choicePlatform.selectionModel().selectFirst()
+  val platforms = Vector(PlatformAndroid, PlatformIOS)
+
+  def currentPlatform: Platform = platforms(choicePlatform.selectionModel().getSelectedIndex)
+
   // --------------- 原始日志信息 ------------------
 
   val originalLogsContainer = new VBox
@@ -79,7 +87,7 @@ object AnalyzerApp extends JFXApp {
 
   // 带有注释的日志项
   val allLogsWithComment: ObjectBinding[List[(LogItem, List[String])]] = createObjectBinding(() => {
-    logList().map(log => (log, Analyzer.commentLog(log)))
+    logList().map(log => (log, Analyzer.commentLog(log, currentPlatform)))
   }, logList)
 
   // 渲染后的日志项
@@ -231,36 +239,31 @@ object AnalyzerApp extends JFXApp {
       case Some(helps) => helps
     }
     val renderedHelps = infos.map { case (helpInfos, logs) =>
-      (helpInfos, logs.map(log => (log, Analyzer.commentLog(log))))
+      (helpInfos, logs.map(log => (log, Analyzer.commentLog(log, currentPlatform))))
     }.map { case (helpInfo, commentedLogs) =>
       Renderer.renderHelpInfo(helpInfo, commentedLogs)
     }
     analyzeResultShowNodes() = renderedHelps
   }
 
+  // 问题列表
   val problems: List[Problem] = Analyzer.loadProblemList
-
   val choiceProblem = new ChoiceBox(ObservableBuffer(problems.map(_.name)))
-
+  choiceProblem.selectionModel().selectFirst()
   val problemNameToTag: Map[String, ProblemTag] = problems.map(problem => (problem.name, problem.tag)).toMap
 
-  choiceProblem.selectionModel().selectFirst()
-  val choicePlatform = new ChoiceBox(ObservableBuffer("Android", "iOS"))
-  choicePlatform.selectionModel().selectFirst()
-  val platforms = Vector(PlatformAndroid, PlatformIOS)
-
+  // 时间筛选
   val inputAnalyzeStartTime: DateTimeTextField = DateTimeTextField()
   val inputAnalyzeEndTime: DateTimeTextField = DateTimeTextField()
 
   val btnStartAnalyze = new Button {
     text = "开始分析"
     onAction = { _: ActionEvent =>
-      val platform = platforms(choicePlatform.selectionModel().getSelectedIndex)
       val problemTag = problemNameToTag(choiceProblem.selectionModel().getSelectedItem)
       val startTime = inputAnalyzeStartTime.getTime
       val endTime = inputAnalyzeEndTime.getTime
       val filteredLogs = logs.Utils.timeFilter(startTime, endTime)(logList())
-      Analyzer.analyzeLog(platform)(filteredLogs, problemTag) match {
+      Analyzer.analyzeLog(currentPlatform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
           val helpInfoList = resultList.map(res => (res.helpInfo, res.relatedLogs))
           optHelpInfos() = Some(helpInfoList)
@@ -284,13 +287,12 @@ object AnalyzerApp extends JFXApp {
       children = Seq(
         new FlowPane {
           hgap = 10
-          children = Seq(btnLoadFile, lbFileHint)
+          children = Seq(Label("运行平台"), choicePlatform, btnLoadFile, lbFileHint)
         },
         new FlowPane {
           hgap = 10
           children = Seq(
             Label("问题描述"), choiceProblem,
-            Label("运行平台"), choicePlatform,
             Label("时间区间 从"), inputAnalyzeStartTime, Label("至"), inputAnalyzeEndTime,
             btnStartAnalyze, btnClearAnalyzeResult
           )

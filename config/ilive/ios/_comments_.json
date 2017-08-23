@@ -1,0 +1,23 @@
+{
+  "distinct": {
+  },
+  "fuzzy": {
+    "initSdk\\|succ": "初始化 iLive SDK",
+    "tlsLogin\\|start": "开始登录 TLS SDK",
+    "iLiveLogin\\|start": "开始登录 iLive SDK",
+    "iLiveLogin\\|succ": "iLive SDK 登录成功",
+    "createOpenGLView\\|succ": "创建渲染根视图",
+    "addRenderView\\|succ": "设置渲染子视图",
+    "enterAVRoom\\|start": "开始创建 AV 房间",
+    "enterAVRoom\\|succ": "创建 AV 房间成功",
+    "enableCamera\\|start:enable:YES": "开始开启摄像头",
+    "enableCamera\\|start:enable:NO": "开始关闭摄像头",
+    "enableCamera\\|succ:enable:YES": "开启摄像头成功",
+    "enableCamera\\|succ:enable:NO": "关闭摄像头成功",
+    "createIMGroup\\|start": "开始创建 IM 聊天群组",
+    "createIMGroup\\|succ": "创建 IM 聊天群组成功",
+    "videoFrame": "收到视频帧",
+    "exitAVRoom\\|start": "开始退出 AV 房间",
+    "exitVRoom\\|succ": "成功退出 AV 房间"
+  }
+}

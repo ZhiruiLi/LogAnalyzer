@@ -1,13 +1,13 @@
 package com.example.zhiruili.loganalyzer.comment
 
-import com.example.zhiruili.loganalyzer.Sdk
+import com.example.zhiruili.loganalyzer.{Platform, Sdk}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
 import scala.io.Source
 import scala.util.Try
 
 trait CommentLoader {
-  def loadCommentBindings(sdk: Sdk): Try[CommentBindings]
+  def loadCommentBindings(sdk: Sdk, platform: Platform): Try[CommentBindings]
 }
 
 /**
@@ -25,7 +25,7 @@ trait CommentLoader {
   *
   * }
   *
-  * $baseDir/$sdk/$generalFileName
+  * $baseDir/$sdk/$platform/$generalFileName
   * {
   *   "distinct": {
   *     "message abc": "comment abc",
@@ -46,9 +46,9 @@ object CommentLoader {
 
     new CommentLoader {
 
-      def loadCommentBindings(sdk: Sdk): Try[CommentBindings] = {
+      def loadCommentBindings(sdk: Sdk, platform: Platform): Try[CommentBindings] = {
         val errPath = s"""$baseDir/$errorFileName"""
-        val genPath = s"""$baseDir/$sdk/$generalFileName"""
+        val genPath = s"""$baseDir/$sdk/$platform/$generalFileName"""
         for {
           errContent <- Try { Source.fromFile(errPath).mkString }
           genContent <- Try { Source.fromFile(genPath).mkString }
