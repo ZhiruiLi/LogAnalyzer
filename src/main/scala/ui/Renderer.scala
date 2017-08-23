@@ -22,7 +22,7 @@ object Renderer {
 
   object Formatter {
 
-    val dateFormatter = new SimpleDateFormat("yy-MM-dd HH:mm:ss")
+    val dateFormatter = new SimpleDateFormat("MM-dd HH:mm:ss")
 
     def formatDate(date: Date): String = dateFormatter.format(date)
 
@@ -47,7 +47,7 @@ object Renderer {
 
     def formatEquivocalLog(log: EquivocalLog): String = {
       def placeholder(tag: String) = s"<$tag: none>"
-      s"${log.isKeyLog.map(formatIsKey).getOrElse(placeholder("关键日志"))} " +
+      s"${log.isKeyLog.map(formatIsKey).getOrElse(placeholder("关键日志"))}" +
         s"[${log.timestamp.map(formatDate).getOrElse(placeholder("打印时间"))}] " +
         s"${log.message.getOrElse(placeholder("日志信息"))} " +
         s"(${formatExt(log.extMessage)}) [${log.position.getOrElse(placeholder("打印位置"))}] " +
@@ -60,7 +60,7 @@ object Renderer {
   }
 
   val levelColorMap: Map[LogLevel, Color] =
-    Map(LvError -> Red, LvWarn -> Orange, LvInfo -> Black, LvDebug -> Black, LvVerbose -> Black)
+    Map(LvError -> Red, LvWarn -> Orange, LvInfo -> Black, LvDebug -> Black, LvVerbose -> DimGray)
 
   val defaultColor: Color = DarkGray
 
@@ -82,7 +82,7 @@ object Renderer {
     case log@EquivocalLog(originalLog, _, _, optLv, _, _, _) =>
       val color = optLv.map(levelColor).getOrElse(defaultColor)
       val logStr = Formatter.formatEquivocalLog(log)
-      val text = s"${comments.mkString("\n")}\n $logStr\n 原始日志：$originalLog"
+      val text = s"${comments.mkString("\n")}\n $logStr\n  原始日志：$originalLog"
       coloredText(text, color)
     case log@UnknownLog(_) =>
       coloredText(Formatter.formatUnknownLog(log), defaultColor)

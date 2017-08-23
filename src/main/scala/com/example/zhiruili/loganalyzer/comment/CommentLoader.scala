@@ -27,11 +27,20 @@ trait CommentLoader {
   *
   * $baseDir/$sdk/$generalFileName
   * {
-  *   "message abc": "comment abc",
-  *   "message def": "comment def"
+  *   "distinct": {
+  *     "message abc": "comment abc",
+  *     "message def": "comment def"
+  *   },
+  *   "fuzzy": {
+  *     "message abc": "comment abc",
+  *     "message def": "comment def"
+  *   }
   * }
   */
 object CommentLoader {
+
+  type RawDistinctBindings = List[(String, String)]
+  type RawFuzzyBindings = List[(String, String)]
 
   def ofFile(baseDir: String, errorFileName: String, generalFileName: String): CommentLoader = {
 
@@ -46,8 +55,8 @@ object CommentLoader {
           errObj <- Try { Json.parse(errContent).as[JsObject] }
           genObj <- Try { Json.parse(genContent).as[JsObject] }
           errRes <- parseErrorBindings(errObj)
-          genRes <- parseGeneralBindings(genObj)
-        } yield CommentBindings(errRes, genRes)
+          (distinct, fuzzy) <- parseGeneralBindings(genObj)
+        } yield CommentBindings(errRes, distinct, fuzzy)
       }
 
       def parseErrorBindings(bindingObj: JsObject): Try[List[(String, List[(Int, String)])]] = {
@@ -73,8 +82,19 @@ object CommentLoader {
           .map(_.reverse)
       }
 
-      def parseGeneralBindings(rawBindings: JsObject): Try[List[(String, String)]] = Try {
-        rawBindings.fields.toList.map { case (msg, commentJsVal) => (msg, commentJsVal.as[String]) }
+      def parseGeneralBindings(rawBindings: JsObject): Try[(RawDistinctBindings, RawFuzzyBindings)] = Try {
+        val distinctBindings =
+          (rawBindings \ "distinct")
+            .as[JsObject]
+            .fields
+            .toList
+            .map { case (msg, commentJsVal) => (msg, commentJsVal.as[String]) }
+        val fuzzyBindings = (rawBindings \ "fuzzy").as[JsObject]
+          .as[JsObject]
+          .fields
+          .toList
+          .map { case (msg, commentJsVal) => (msg, commentJsVal.as[String]) }
+        (distinctBindings, fuzzyBindings)
       }
     }
   }
