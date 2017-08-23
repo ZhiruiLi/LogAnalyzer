@@ -1,0 +1,19 @@
+ScrollPane {
+  -fx-background-color: transparent;
+  -fx-background: #FFFFFF;
+  -fx-border-color: #FFFFFF;
+}
+
+.text-emphatic {
+  -fx-font-size: 12pt;
+}
+
+.log {
+  -fx-font-family: Menlo, Consolas, Monospace;
+  -fx-font-size: 10pt;
+}
+
+.log-silent {
+  -fx-font-family: Menlo, Consolas, Monospace;
+  -fx-font-size: 9pt;
+}

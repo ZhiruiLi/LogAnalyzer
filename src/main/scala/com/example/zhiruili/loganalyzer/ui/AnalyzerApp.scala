@@ -33,11 +33,11 @@ object AnalyzerApp extends JFXApp {
 
   // --------------- 公用 ------------------------
 
-  val cbFilterPlatform = new ChoiceBox(ObservableBuffer("Android", "iOS"))
-  cbFilterPlatform.selectionModel().selectFirst()
+  val platformChoiceBox = new ChoiceBox(ObservableBuffer("Android", "iOS"))
+  platformChoiceBox.selectionModel().selectFirst()
   val platforms = Vector(PlatformAndroid, PlatformIOS)
 
-  def currentPlatform: Platform = platforms(cbFilterPlatform.selectionModel().getSelectedIndex)
+  def currentPlatform: Platform = platforms(platformChoiceBox.selectionModel().getSelectedIndex)
 
   // --------------- 原始日志信息 ------------------
 
@@ -49,7 +49,7 @@ object AnalyzerApp extends JFXApp {
 
   // 错误信息
   val errMessage: StringProperty = StringProperty("")
-  val errMessageNode = new TextFlow(
+  val errMessageText = new TextFlow(
     new Text { text <== errMessage }
   )
   def setError(str: String): Unit = {
@@ -62,9 +62,9 @@ object AnalyzerApp extends JFXApp {
   // 显示在 original log 区域的节点
   val originalLogShowNodes: ObjectProperty[List[Node]] = ObjectProperty(Nil)
 
-  val defaultLabel = "请选择日志文件"
-  val lbFileHint = Label(defaultLabel)
-  val btnLoadFile = new Button {
+  val defaultLabelText = "请选择日志文件"
+  val fileHintLabel = Label(defaultLabelText)
+  val loadFileButton = new Button {
     text = "导入本地日志文件"
     onAction = (_: ActionEvent) => {
       clearError()
@@ -75,12 +75,12 @@ object AnalyzerApp extends JFXApp {
         Try(Source.fromFile(selectedFile).mkString).flatMap(Analyzer.logParser.parseString) match {
           case Success(items) =>
             logList() = items
-            lbFileHint.text = selectedFile.getAbsolutePath
+            fileHintLabel.text = selectedFile.getAbsolutePath
           case Failure(error) =>
-            lbFileHint.text = error.getMessage
+            fileHintLabel.text = error.getMessage
         }
       } else {
-        lbFileHint.text() = defaultLabel
+        fileHintLabel.text() = defaultLabelText
       }
     }
   }
@@ -111,24 +111,24 @@ object AnalyzerApp extends JFXApp {
   }
 
   // 过滤关键日志
-  val cbFilterIsKeyLog = new ChoiceBox(ObservableBuffer("无约束", "是", "否"))
-  cbFilterIsKeyLog.selectionModel().selectFirst()
-  cbFilterIsKeyLog.selectionModel().selectedIndexProperty().onChange {
+  val filterIsKeyLogChoiceBox = new ChoiceBox(ObservableBuffer("无约束", "是", "否"))
+  filterIsKeyLogChoiceBox.selectionModel().selectFirst()
+  filterIsKeyLogChoiceBox.selectionModel().selectedIndexProperty().onChange {
     setFilterExpired()
   }
-  def filterOptIsKeyLog: Option[Boolean] = cbFilterIsKeyLog.selectionModel().getSelectedIndex match {
+  def filterOptIsKeyLog: Option[Boolean] = filterIsKeyLogChoiceBox.selectionModel().getSelectedIndex match {
     case 0 => None
     case 1 => Some(true)
     case 2 => Some(false)
   }
 
   // 过滤最低等级日志
-  val cbMinLogLevel = new ChoiceBox(ObservableBuffer("Verbose", "Debug", "Info", "Warn", "Error"))
-  cbMinLogLevel.selectionModel().selectFirst()
-  cbMinLogLevel.selectionModel().selectedIndexProperty().onChange {
+  val minLogLevelChoiceBox = new ChoiceBox(ObservableBuffer("Verbose", "Debug", "Info", "Warn", "Error"))
+  minLogLevelChoiceBox.selectionModel().selectFirst()
+  minLogLevelChoiceBox.selectionModel().selectedIndexProperty().onChange {
     setFilterExpired()
   }
-  def filterMinLogLevel: LogLevel = cbMinLogLevel.selectionModel().getSelectedIndex match {
+  def filterMinLogLevel: LogLevel = minLogLevelChoiceBox.selectionModel().getSelectedIndex match {
     case 0 => LvVerbose
     case 1 => LvDebug
     case 2 => LvInfo
@@ -137,35 +137,35 @@ object AnalyzerApp extends JFXApp {
   }
 
   // 日志信息过滤输入框
-  val tfFilterMessage: TextField = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
-  def filterMessage: Option[String] = tfFilterMessage.text() match {
+  val filterMessageTextField: TextField = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
+  def filterMessage: Option[String] = filterMessageTextField.text() match {
     case "" => None
     case str => Some(if (isStrictMode) str else createFuzzyRegex(str))
   }
 
   // 日志打印位置过滤输入框
-  val tfFilterPosition: TextField = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
-  def filterPosition: Option[String] = tfFilterPosition.text() match {
+  val filterPositionTextField: TextField = new TextField { onKeyTyped = { _: KeyEvent => setFilterExpired() } }
+  def filterPosition: Option[String] = filterPositionTextField.text() match {
     case "" => None
     case str => Some(if (isStrictMode) str else createFuzzyRegex(str))
   }
 
   // 是否采用正则匹配，未选择则为模糊匹配
-  val cbIsStrictMode = new CheckBox("严格匹配(正则)") { onAction = { _: ActionEvent => setFilterExpired() } }
-  def isStrictMode: Boolean = cbIsStrictMode.selected()
+  val isStrictModeCheckBox = new CheckBox("严格匹配(正则)") { onAction = { _: ActionEvent => setFilterExpired() } }
+  def isStrictMode: Boolean = isStrictModeCheckBox.selected()
 
   // 输出结果是否包含无法解析的日志
-  val cbIncludeUnknown = new CheckBox("结果包含无法解析的日志") { onAction = { _: ActionEvent => setFilterExpired() } }
-  def includeUnknown: Boolean = cbIncludeUnknown.selected()
+  val includeUnknownCheckBox = new CheckBox("结果包含无法解析的日志") { onAction = { _: ActionEvent => setFilterExpired() } }
+  def includeUnknown: Boolean = includeUnknownCheckBox.selected()
 
   // 过滤时间区间
-  val inputOriginLogStartTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
-  val inputOriginLogEndTime: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
+  val originLogStartTimeTextField: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
+  val originLogEndTimeTextField: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
 
   // 更新日志浏览区域的日志内容
   def updateOriginLogList(): Unit = {
     val logsAfterFilter =
-      logs.Utils.timeFilter(inputOriginLogStartTime.getTime, inputOriginLogEndTime.getTime)(renderedLogs())
+      logs.Utils.timeFilter(originLogStartTimeTextField.getTime, originLogEndTimeTextField.getTime)(renderedLogs())
     val matchRegex = (str: String, regexStr: String) => regexStr.r.findFirstIn(str).nonEmpty
     val newNodes: List[Node] = logsAfterFilter
       .filter {
@@ -236,20 +236,20 @@ object AnalyzerApp extends JFXApp {
 
   // 问题列表
   val problems: List[Problem] = Analyzer.loadProblemList
-  val choiceProblem = new ChoiceBox(ObservableBuffer(problems.map(_.name)))
-  choiceProblem.selectionModel().selectFirst()
+  val problemChoiceBox = new ChoiceBox(ObservableBuffer(problems.map(_.name)))
+  problemChoiceBox.selectionModel().selectFirst()
   val problemNameToTag: Map[String, ProblemTag] = problems.map(problem => (problem.name, problem.tag)).toMap
 
   // 时间筛选
-  val inputAnalyzeStartTime: DateTimeTextField = DateTimeTextField()
-  val inputAnalyzeEndTime: DateTimeTextField = DateTimeTextField()
+  val analyzeStartTimeTextField: DateTimeTextField = DateTimeTextField()
+  val analyzeEndTimeTextField: DateTimeTextField = DateTimeTextField()
 
-  val btnStartAnalyze = new Button {
+  val startAnalyzeButton = new Button {
     text = "开始分析"
     onAction = { _: ActionEvent =>
-      val problemTag = problemNameToTag(choiceProblem.selectionModel().getSelectedItem)
-      val startTime = inputAnalyzeStartTime.getTime
-      val endTime = inputAnalyzeEndTime.getTime
+      val problemTag = problemNameToTag(problemChoiceBox.selectionModel().getSelectedItem)
+      val startTime = analyzeStartTimeTextField.getTime
+      val endTime = analyzeEndTimeTextField.getTime
       val filteredLogs = logs.Utils.timeFilter(startTime, endTime)(logList())
       Analyzer.analyzeLog(currentPlatform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
@@ -261,7 +261,7 @@ object AnalyzerApp extends JFXApp {
     }
   }
 
-  val btnClearAnalyzeResult = new Button {
+  val clearAnalyzeResultButton = new Button {
     text = "清空帮助信息"
     onAction = { _: ActionEvent => optHelpInfos() = None }
   }
@@ -275,14 +275,14 @@ object AnalyzerApp extends JFXApp {
       children = Seq(
         new FlowPane {
           hgap = 10
-          children = Seq(Label("运行平台"), cbFilterPlatform, btnLoadFile, lbFileHint)
+          children = Seq(Label("运行平台"), platformChoiceBox, loadFileButton, fileHintLabel)
         },
         new FlowPane {
           hgap = 10
           children = Seq(
-            Label("问题描述"), choiceProblem,
-            Label("时间区间 从"), inputAnalyzeStartTime, Label("至"), inputAnalyzeEndTime,
-            btnStartAnalyze, btnClearAnalyzeResult
+            Label("问题描述"), problemChoiceBox,
+            Label("时间区间 从"), analyzeStartTimeTextField, Label("至"), analyzeEndTimeTextField,
+            startAnalyzeButton, clearAnalyzeResultButton
           )
         }
       )
@@ -307,13 +307,13 @@ object AnalyzerApp extends JFXApp {
             hgap = 10
             vgap = 5
             children = Seq(
-              Label("是否关键日志"), cbFilterIsKeyLog,
-              Label("最低日志等级"), cbMinLogLevel,
-              Label("日志信息"), tfFilterMessage,
-              Label("打印位置"), tfFilterPosition,
-              cbIsStrictMode,
-              cbIncludeUnknown,
-              Label("筛选时间区间 从"), inputOriginLogStartTime, Label("至"), inputOriginLogEndTime
+              Label("是否关键日志"), filterIsKeyLogChoiceBox,
+              Label("最低日志等级"), minLogLevelChoiceBox,
+              Label("日志信息"), filterMessageTextField,
+              Label("打印位置"), filterPositionTextField,
+              isStrictModeCheckBox,
+              includeUnknownCheckBox,
+              Label("筛选时间区间 从"), originLogStartTimeTextField, Label("至"), originLogEndTimeTextField
             )
           }
         )
@@ -321,16 +321,14 @@ object AnalyzerApp extends JFXApp {
       center = new ScrollPane {
         margin = Insets(top = 0, right = 0, left = 0, bottom = 0)
         padding = Insets(top = 0, right = 0, left = 10, bottom = 0)
-        style = "-fx-background-color: transparent;" +
-                "-fx-background: #FFFFFF;" +
-                "-fx-border-color: #FFFFFF;"
+
         fitToWidth = true
         fitToHeight = true
         hbarPolicy = ScrollBarPolicy.AsNeeded
         vbarPolicy = ScrollBarPolicy.Always
         content = originalLogsContainer
       }
-      bottom = errMessageNode
+      bottom = errMessageText
     }
   }
 
@@ -342,6 +340,7 @@ object AnalyzerApp extends JFXApp {
     minHeight = 300
     scene = new Scene {
       content = mainContainer
+      stylesheets = Seq(getClass.getResource("main.css").toExternalForm)
     }
   }
   mainContainer.prefWidth <== stage.width
