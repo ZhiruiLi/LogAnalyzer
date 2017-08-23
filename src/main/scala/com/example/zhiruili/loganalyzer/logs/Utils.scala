@@ -44,13 +44,15 @@ object Utils {
       case None =>
         originLogs
       case Some(end) =>
-        originLogs.takeWhile {
-          case log: LegalLog => log.timestamp.getTime <= end
-          case log: EquivocalLog => log.timestamp match {
-            case None => true
-            case Some(time) => time.getTime <= end
+        originLogs.takeWhile { logLike =>
+          asLogItem(logLike) match {
+            case log: LegalLog => log.timestamp.getTime <= end
+            case log: EquivocalLog => log.timestamp match {
+              case None => true
+              case Some(time) => time.getTime <= end
+            }
+            case _: UnknownLog => true
           }
-          case _: UnknownLog => true
         }
     }
 
