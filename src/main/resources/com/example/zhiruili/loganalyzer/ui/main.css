@@ -17,3 +17,30 @@ ScrollPane {
   -fx-font-family: Menlo, Consolas, Monospace;
   -fx-font-size: 9pt;
 }
+
+.container-box {
+  -fx-padding: 10 20 0 20;
+  -fx-spacing: 10;
+}
+
+.container-flow {
+  -fx-hgap: 10;
+  -fx-vgap: 3;
+}
+
+.label-base {
+  -fx-font-size: 10pt;
+}
+
+.label-title {
+  -fx-font-size: 18pt;
+}
+
+#log-scroll-pane {
+  -fx-fit-to-width: true;
+  -fx-fit-to-height: true;
+  -fx-hbar-policy: as-needed;
+  -fx-vbar-policy: as-needed;
+  -fx-padding: 5 0 0 20;
+  -fx-margin: 0 0 0 0;
+}

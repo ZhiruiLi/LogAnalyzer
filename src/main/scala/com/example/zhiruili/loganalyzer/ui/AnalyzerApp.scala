@@ -12,12 +12,10 @@ import scalafx.application.JFXApp
 import scalafx.beans.binding.{Bindings, BooleanBinding, ObjectBinding}
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
-import scalafx.geometry.Insets
 import scalafx.scene.{Node, Scene}
-import scalafx.scene.layout.{BorderPane, FlowPane, VBox}
+import scalafx.scene.layout.{BorderPane, VBox}
 import scalafx.stage.FileChooser
 import scalafx.event.ActionEvent
-import scalafx.scene.control.ScrollPane.ScrollBarPolicy
 import scalafx.scene.control._
 import scalafx.scene.input.KeyEvent
 import scalafx.scene.text.{Text, TextFlow}
@@ -237,7 +235,7 @@ object AnalyzerApp extends JFXApp {
   val problems: List[Problem] = Analyzer.loadProblemList match {
     case Success(lst) => lst
     case Failure(thw) =>
-      setError(thw.getMessage())
+      setError(thw.getMessage)
       Nil
   }
   val problemChoiceBox = new ChoiceBox(ObservableBuffer(problems.map(_.name)))
@@ -272,64 +270,34 @@ object AnalyzerApp extends JFXApp {
 
   // --------------- 主界面 ---------------------
 
-  val mainContainer = new BorderPane {
-    top = new VBox {
-      padding = Insets(top = 10, right = 20, left = 20, bottom = 10)
-      spacing = 5
-      children = Seq(
-        new FlowPane {
-          hgap = 10
-          children = Seq(Label("运行平台"), platformChoiceBox, loadFileButton, fileHintLabel)
-        },
-        new FlowPane {
-          hgap = 10
-          children = Seq(
-            Label("问题描述"), problemChoiceBox,
-            Label("时间区间 从"), analyzeStartTimeTextField, Label("至"), analyzeEndTimeTextField,
-            startAnalyzeButton, clearAnalyzeResultButton
-          )
-        }
-      )
-    }
-    center = new BorderPane {
-      top = new VBox {
-        padding = Insets(top = 0, right = 20, left = 20, bottom = 10)
-        spacing = 10
-        children = Seq(
-          new Label {
-            text = "帮助信息"
-            managed <== createBooleanBinding(() => optHelpInfos().nonEmpty, optHelpInfos)
-            visible <== managed
-            style = "-fx-font-size: 18pt"
-          },
-          analyzeResultContainer,
-          new Label {
-            text = "原始日志"
-            style = "-fx-font-size: 18pt"
-          },
-          new FlowPane {
-            hgap = 10
-            vgap = 5
-            children = Seq(
-              Label("是否关键日志"), filterIsKeyLogChoiceBox,
-              Label("最低日志等级"), minLogLevelChoiceBox,
-              Label("日志信息"), filterMessageTextField,
-              Label("打印位置"), filterPositionTextField,
-              isStrictModeCheckBox,
-              includeUnknownCheckBox,
-              Label("筛选时间区间 从"), originLogStartTimeTextField, Label("至"), originLogEndTimeTextField
-            )
-          }
-        )
-      }
-      center = new ScrollPane {
-        margin = Insets(top = 0, right = 0, left = 0, bottom = 0)
-        padding = Insets(top = 0, right = 0, left = 10, bottom = 0)
+  import UIHelper._
 
-        fitToWidth = true
-        fitToHeight = true
-        hbarPolicy = ScrollBarPolicy.AsNeeded
-        vbarPolicy = ScrollBarPolicy.Always
+  val mainContainer = new BorderPane {
+    top = vBoxContainer(
+      flowContainer(baseLabel("运行平台"), platformChoiceBox, loadFileButton, fileHintLabel),
+      flowContainer(
+        baseLabel("问题描述"), problemChoiceBox,
+        baseLabel("时间区间 从"), analyzeStartTimeTextField, baseLabel("至"), analyzeEndTimeTextField,
+        startAnalyzeButton, clearAnalyzeResultButton
+      )
+    )
+    center = new BorderPane {
+      top = vBoxContainer(
+        titleLabel("帮助信息").hideIf(createBooleanBinding(() => optHelpInfos().nonEmpty, optHelpInfos)),
+        analyzeResultContainer,
+        titleLabel("原始日志"),
+        flowContainer(
+          baseLabel("是否关键日志"), filterIsKeyLogChoiceBox,
+          baseLabel("最低日志等级"), minLogLevelChoiceBox,
+          baseLabel("日志信息"), filterMessageTextField,
+          baseLabel("打印位置"), filterPositionTextField,
+          isStrictModeCheckBox,
+          includeUnknownCheckBox,
+          baseLabel("筛选时间区间 从"), originLogStartTimeTextField, baseLabel("至"), originLogEndTimeTextField
+        )
+      )
+      center = new ScrollPane {
+        id = "log-scroll-pane"
         content = originalLogsContainer
       }
       bottom = errMessageText
