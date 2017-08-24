@@ -33,10 +33,9 @@
     "onNewMessages": "收到新消息"
   },
   "fuzzy": {
-    "initSdk\\-\\>init appid": "初始化 SDK",
-    "ILVB-Room\\|init entered": "初始化房间",
-    "ILVB-Room\\|onDestory": "销毁房间",
-    "clearRoomRes": "清理房间资源",
+    "notifyCustomMessage\\-\\>no notification listener": "收到自定义消息但缺少消息监听者",
+    "setAutoOrientation\\-\\>enable\\: true": "打开自动旋转画面",
+    "setAutoOrientation\\-\\>enable\\: false": "关闭自动旋转画面",
     "init root view": "设置渲染层根视图",
     "init sub views": "设置渲染层子视图",
     "start create room": "创建房间",
@@ -60,6 +59,10 @@
     "enableMic true, result:true": "打开麦克风成功",
     "enableMic false, result:false": "关闭麦克风成功",
     "enableMic true, result:false": "打开麦克风失败",
-    "enableMic false, result:true": "关闭麦克风失败"
+    "enableMic false, result:true": "关闭麦克风失败",
+    "initSdk\\-\\>init appid": "初始化 SDK",
+    "ILVB-Room\\|init entered": "初始化房间",
+    "ILVB-Room\\|onDestory": "销毁房间",
+    "clearRoomRes": "清理房间资源"
   }
 }
