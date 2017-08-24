@@ -5,8 +5,7 @@ import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, Probl
 import com.example.zhiruili.loganalyzer.logs._
 import com.example.zhiruili.utils.Utils._
 
-import scala.io.Source
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 import scalafx.Includes._
 import scalafx.animation.{KeyFrame, Timeline}
 import scalafx.application.JFXApp
@@ -37,7 +36,7 @@ object AnalyzerApp extends JFXApp {
   platformChoiceBox.selectionModel().selectFirst()
   val platforms = Vector(PlatformAndroid, PlatformIOS)
 
-  def currentPlatform: Platform = platforms(platformChoiceBox.selectionModel().getSelectedIndex)
+  def selectedPlatform: Platform = platforms(platformChoiceBox.selectionModel().getSelectedIndex)
 
   // --------------- 原始日志信息 ------------------
 
@@ -72,7 +71,7 @@ object AnalyzerApp extends JFXApp {
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
         println(selectedFile)
-        Try(Source.fromFile(selectedFile).mkString).flatMap(Analyzer.logParser.parseString) match {
+        Analyzer.platformToLogParser(selectedPlatform).parseFile(selectedFile) match {
           case Success(items) =>
             logList() = items
             fileHintLabel.text = selectedFile.getAbsolutePath
@@ -87,7 +86,7 @@ object AnalyzerApp extends JFXApp {
 
   // 带有注释的日志项
   val allLogsWithComment: ObjectBinding[List[(LogItem, List[String])]] = createObjectBinding(() => {
-    logList().map(log => (log, Analyzer.commentLog(log, currentPlatform)))
+    logList().map(log => (log, Analyzer.commentLog(log, selectedPlatform)))
   }, logList)
 
   // 渲染后的日志项
@@ -227,7 +226,7 @@ object AnalyzerApp extends JFXApp {
       case Some(helps) => helps
     }
     val renderedHelps = infos.map { case (helpInfos, logs) =>
-      (helpInfos, logs.map(log => (log, Analyzer.commentLog(log, currentPlatform))))
+      (helpInfos, logs.map(log => (log, Analyzer.commentLog(log, selectedPlatform))))
     }.map { case (helpInfo, commentedLogs) =>
       Renderer.renderHelpInfo(helpInfo, commentedLogs)
     }
@@ -256,7 +255,7 @@ object AnalyzerApp extends JFXApp {
       val startTime = analyzeStartTimeTextField.getTime
       val endTime = analyzeEndTimeTextField.getTime
       val filteredLogs = logs.Utils.timeFilter(startTime, endTime)(logList())
-      Analyzer.analyzeLog(currentPlatform)(filteredLogs, problemTag) match {
+      Analyzer.analyzeLog(selectedPlatform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
           val helpInfoList = resultList.map(res => (res.helpInfo, res.relatedLogs))
           optHelpInfos() = Some(helpInfoList)

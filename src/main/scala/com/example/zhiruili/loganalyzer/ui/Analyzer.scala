@@ -22,7 +22,10 @@ object Analyzer {
   val configLoader: ConfigLoader = FileConfigLoader.createSimpleLoader(configBaseDir, helpBindConfigName, problemConfigName)
   val ruleLoader: RuleLoader = FileRuleLoader.createSimpleLoader(configBaseDir, BasicRuleParser)
   val analyzerLoader: LogAnalyzerLoader = LogAnalyzerLoader(configLoader, ruleLoader)
-  val logParser: LogParser = LogParserDelegateChain(BasicLogParser, List(ILiveLegacyLogParsers.ofAndroid))
+
+  val platformToLogParser: Map[Platform, LogParser] = Map(
+    PlatformAndroid -> LogParserDelegateChain(BasicLogParser, List(ILiveLegacyLogParsers.ofAndroid)),
+    PlatformIOS -> LogParserDelegateChain(BasicLogParser, List(ILiveLegacyLogParsers.ofIOS)))
 
   type ErrBindings = Map[String, Map[Int, String]]
   type GenBindings = Map[String, String]
