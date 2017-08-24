@@ -29,6 +29,13 @@ trait LogAnalyzer {
     */
   def loadHelpInfoBindings(problemTag: ProblemTag): Try[List[HelpInfoBinding]]
 
+  /**
+    * 根据问题标签分析日志
+    *
+    * @param problemTag   问题标签
+    * @param logs         日志列表
+    * @return 分析结果列表，可能出错
+    */
   def analyzeLogs(problemTag: ProblemTag)(logs: List[LogItem]): Try[List[AnalyzeResult]] = {
     for {
       helpBinds <- loadHelpInfoBindings(problemTag)

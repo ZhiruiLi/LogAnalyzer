@@ -59,4 +59,16 @@ object Utils {
     filterStart(logs, Nil)
   }
 
+  /**
+    * 查找疑似的错误码，如果出现了
+    * Error, error, Fail, fail, ErrCode, errCode, Errcode, errcode, ErrorCode, Errorcode, errorCode, errorcode 之一
+    * 且与某纯数字串相隔不超过 3 个字符，即认为该数字为错误码
+    *
+    * @param message  日志信息
+    * @return 可能的错误码
+    */
+  def findSuspiciousErrorCode(message: String): Option[Int] = {
+    val pattern = """(([Ee]rror)|([Ff]ail)|([Ee]rr[Cc]ode)|([Ee]rror[Cc]ode))([^\d]{0,3})(\d+)""".r
+    pattern.findFirstIn(message).flatMap(str => """\d+""".r.findFirstIn(str)).map(_.toInt)
+  }
 }

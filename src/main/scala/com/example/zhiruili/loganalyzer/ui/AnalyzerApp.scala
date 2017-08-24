@@ -235,7 +235,12 @@ object AnalyzerApp extends JFXApp {
   }
 
   // 问题列表
-  val problems: List[Problem] = Analyzer.loadProblemList
+  val problems: List[Problem] = Analyzer.loadProblemList match {
+    case Success(lst) => lst
+    case Failure(thw) =>
+      setError(thw.getMessage())
+      Nil
+  }
   val problemChoiceBox = new ChoiceBox(ObservableBuffer(problems.map(_.name)))
   problemChoiceBox.selectionModel().selectFirst()
   val problemNameToTag: Map[String, ProblemTag] = problems.map(problem => (problem.name, problem.tag)).toMap

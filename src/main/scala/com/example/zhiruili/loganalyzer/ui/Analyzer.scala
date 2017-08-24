@@ -22,11 +22,12 @@ object Analyzer {
   val configLoader: ConfigLoader = FileConfigLoader.createSimpleLoader(configBaseDir, helpBindConfigName, problemConfigName)
   val ruleLoader: RuleLoader = FileRuleLoader.createSimpleLoader(configBaseDir, BasicRuleParser)
   val analyzerLoader: LogAnalyzerLoader = LogAnalyzerLoader(configLoader, ruleLoader)
-  val logParser: LogParser = LogParserDelegateChain(BasicLogParser, List(ILiveLegacyLogParser))
+  val logParser: LogParser = LogParserDelegateChain(BasicLogParser, List(ILiveLegacyLogParsers.ofAndroid))
 
   type ErrBindings = Map[String, Map[Int, String]]
   type GenBindings = Map[String, String]
 
+  // 获取指定平台的注释绑定关系
   val commentBindings: Map[Platform, CommentBindings] = {
     val loader = CommentLoader.ofFile(configBaseDir, errorCommentFileName, generalCommentFileName)
     Map(
@@ -34,8 +35,21 @@ object Analyzer {
       PlatformIOS -> loader.loadCommentBindings(currentSdk, PlatformIOS).get)
   }
 
-  def loadProblemList: List[Problem] = configLoader.loadProblemList(currentSdk).get
+  /**
+    * 读取问题列表
+    *
+    * @return 问题列表
+    */
+  def loadProblemList: Try[List[Problem]] = configLoader.loadProblemList(currentSdk)
 
+  /**
+    * 分析日志
+    *
+    * @param platform     运行平台
+    * @param logItems     日志项
+    * @param problemTag   问题标签
+    * @return 分析结果列表，可能出错
+    */
   def analyzeLog(platform: Platform)(logItems: List[LogItem], problemTag: ProblemTag): Try[List[AnalyzeResult]] = {
 
     val loader = LogAnalyzerLoader(configLoader, ruleLoader)
