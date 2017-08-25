@@ -135,6 +135,12 @@ object Renderer {
     styleClass += "log"
   }
 
+  /**
+    * 渲染不显眼的日志信息
+    *
+    * @param logText    日志文本
+    * @return Text 节点
+    */
   def renderSilentLog(logText: String) = new Text {
     text = logText
     fill = defaultColor
