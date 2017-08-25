@@ -16,5 +16,4 @@ unmanagedJars in Compile += {
   Attributed.blank(file(jh) / "lib/ext/jfxrt.jar")
 }
 
-// mainClass in assembly := Some("ui.AnalyzerApp")
-assemblyJarName in assembly := "run.jar"
+assemblyOutputPath in assembly := new File("./run.jar")
