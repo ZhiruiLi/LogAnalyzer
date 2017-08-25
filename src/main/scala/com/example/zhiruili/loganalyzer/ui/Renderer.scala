@@ -147,6 +147,13 @@ object Renderer {
     styleClass += "log-silent"
   }
 
+  /**
+    * 渲染带有注释的日志
+    *
+    * @param logItem    日志项
+    * @param comments   注释列表
+    * @return 渲染后的节点
+    */
   def renderRichLog(logItem: LogItem, comments: List[String]): Node = logItem match {
     case log@LegalLog(_, _, _, lv, _, _, _) =>
       val color = levelColor(lv)
@@ -169,10 +176,13 @@ object Renderer {
       renderLog(Formatter.formatUnknownLog(log), defaultColor)
   }
 
-  def renderLogsView(richLogs: List[(LogItem, List[String])]): Node = new VBox {
-    children = richLogs.map { case (log, comments) => renderRichLog(log, comments) }
-  }
-
+  /**
+    * 渲染帮助信息
+    *
+    * @param helpInfo   帮助信息
+    * @param richLogs   相应的带有注释的日志列表
+    * @return 渲染呢后的节点
+    */
   def renderHelpInfo(helpInfo: HelpInfo, richLogs: List[(LogItem, List[String])]): Node = {
     def lb(text: String) = new Label(text) { styleClass += "text-emphatic" }
     def tf(text: String) = new TextFlow(new Text(text) { styleClass += "text-emphatic" })
