@@ -163,6 +163,10 @@ object Renderer {
       renderLog(Formatter.formatUnknownLog(log), defaultColor)
   }
 
+  def renderLogsView(richLogs: List[(LogItem, List[String])]): Node = new VBox {
+    children = richLogs.map { case (log, comments) => renderRichLog(log, comments) }
+  }
+
   def renderHelpInfo(helpInfo: HelpInfo, richLogs: List[(LogItem, List[String])]): Node = {
     def lb(text: String) = new Label(text) { styleClass += "text-emphatic" }
     def tf(text: String) = new TextFlow(new Text(text) { styleClass += "text-emphatic" })
