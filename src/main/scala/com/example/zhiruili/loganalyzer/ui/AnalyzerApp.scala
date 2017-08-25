@@ -42,7 +42,6 @@ object AnalyzerApp extends JFXApp {
 
   // 所有日志项
   val logList: ObjectProperty[List[LogItem]] = ObjectProperty(Nil)
-  val logListNotNull: BooleanBinding = createBooleanBinding(() => logList().nonEmpty, logList)
 
   // 错误信息
   val errMessage: StringProperty = StringProperty("")
