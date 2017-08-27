@@ -68,7 +68,7 @@ object AnalyzerApp extends JFXApp {
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
         println(selectedFile)
-        Analyzer.platformToLogParser(selectedPlatform).parseFile(selectedFile) match {
+        AnalyzerHelper.platformToLogParser(selectedPlatform).parseFile(selectedFile) match {
           case Success(items) =>
             logList() = items
             fileHintLabel.text = selectedFile.getAbsolutePath
@@ -83,7 +83,7 @@ object AnalyzerApp extends JFXApp {
 
   // 带有注释的日志项
   val allLogsWithComment: ObjectBinding[List[(LogItem, List[String])]] = createObjectBinding(() => {
-    logList().map(log => (log, Analyzer.commentLog(log, selectedPlatform)))
+    logList().map(log => (log, AnalyzerHelper.commentLog(log, selectedPlatform)))
   }, logList)
 
   // 渲染后的日志项
@@ -223,7 +223,7 @@ object AnalyzerApp extends JFXApp {
       case Some(helps) => helps
     }
     val renderedHelps = infos.map { case (helpInfos, logs) =>
-      (helpInfos, logs.map(log => (log, Analyzer.commentLog(log, selectedPlatform))))
+      (helpInfos, logs.map(log => (log, AnalyzerHelper.commentLog(log, selectedPlatform))))
     }.map { case (helpInfo, commentedLogs) =>
       Renderer.renderHelpInfo(helpInfo, commentedLogs)
     }
@@ -231,7 +231,7 @@ object AnalyzerApp extends JFXApp {
   }
 
   // 问题列表
-  val problems: List[Problem] = Analyzer.loadProblemList match {
+  val problems: List[Problem] = AnalyzerHelper.loadProblemList match {
     case Success(lst) => lst
     case Failure(thw) =>
       setError(thw.getMessage)
@@ -252,7 +252,7 @@ object AnalyzerApp extends JFXApp {
       val startTime = analyzeStartTimeTextField.getTime
       val endTime = analyzeEndTimeTextField.getTime
       val filteredLogs = logs.Utils.timeFilter(startTime, endTime)(logList())
-      Analyzer.analyzeLog(selectedPlatform)(filteredLogs, problemTag) match {
+      AnalyzerHelper.analyzeLog(selectedPlatform)(filteredLogs, problemTag) match {
         case Success(resultList) =>
           val helpInfoList = resultList.map(res => (res.helpInfo, res.relatedLogs))
           optHelpInfos() = Some(helpInfoList)
