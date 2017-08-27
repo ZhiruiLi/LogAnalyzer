@@ -12,6 +12,12 @@ cd LogAnalyzerApp
 sbt run
 ```
 
+执行单元测试:
+
+```bash
+sbt test
+```
+
 工程同时支持 [sbt-assembly](https://github.com/sbt/sbt-assembly) 进行打包:
 
 ```bash
