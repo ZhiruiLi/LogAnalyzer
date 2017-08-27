@@ -1,4 +1,4 @@
-name := "LogAnalyzerApp"
+name := "LogAnalyzer"
 
 version := "0.1"
 
