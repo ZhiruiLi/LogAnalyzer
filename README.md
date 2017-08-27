@@ -7,7 +7,7 @@ iLive SDK 日志分析工具，能根据日志内容进行筛选和注释，同�
 工程使用 [sbt](http://www.scala-sbt.org/) 进行构建，需要先安装该工具。clone 工程到本地，调用 `sbt run` 即可。
 
 ```bash
-git clone https://github.com/ZhiruiLi/LogAnalyzerApp
+git clone https://github.com/ZhiruiLi/LogAnalyzer
 cd LogAnalyzerApp
 sbt run
 ```
