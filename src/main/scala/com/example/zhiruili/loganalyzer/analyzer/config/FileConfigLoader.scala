@@ -2,6 +2,7 @@ package com.example.zhiruili.loganalyzer.analyzer.config
 
 import java.io.File
 
+import com.example.zhiruili.loganalyzer
 import com.example.zhiruili.loganalyzer.analyzer.{AnalyzerConfig, ConfigLoader}
 import com.example.zhiruili.loganalyzer.analyzer.ConfigLoader.{ConfigLoadingException, ProblemLoadingException}
 import com.example.zhiruili.loganalyzer.{Platform, Sdk, Version}
@@ -57,7 +58,7 @@ trait FileConfigLoader extends ConfigLoader {
     * @return 配置文件内容字符串，可能出错
     */
   def loadConfigString(sdk: Sdk, platform: Platform, version: Version): Try[String] = {
-    Try { Source.fromFile(getHelpBindingFilePath(sdk, platform, version)).mkString } match {
+    Try { Source.fromFile(getHelpBindingFilePath(sdk, platform, version))(loganalyzer.encoding).mkString } match {
       case Failure(thw) => Failure(ConfigLoadingException(sdk, platform, version, thw))
       case success => success
     }
@@ -77,7 +78,7 @@ trait FileConfigLoader extends ConfigLoader {
   }
 
   def loadProblemListString(sdk: Sdk): Try[String] = {
-    Try { Source.fromFile(getProblemFilePath(sdk)).mkString } match {
+    Try { Source.fromFile(getProblemFilePath(sdk))(loganalyzer.encoding).mkString } match {
       case Failure(thw) => Failure(ProblemLoadingException(sdk, thw))
       case success => success
     }
@@ -98,6 +99,8 @@ object FileConfigLoader {
 
     new FileConfigLoader {
 
+      import loganalyzer.fileSep
+
       /**
         * 解析帮助信息
         *
@@ -114,7 +117,7 @@ object FileConfigLoader {
         * @return 配置文件所在文件路径字符串
         */
       override def getHelpBindingFilePath(sdk: Sdk, platform: Platform, version: Version): String = {
-        s"${new File(rootDirPath).getAbsolutePath}/$sdk/$platform/$version/$helpConfigName"
+        s"${new File(rootDirPath).getAbsolutePath}$fileSep$sdk$fileSep$platform$fileSep$version$fileSep$helpConfigName"
       }
 
       override def problemListParser: ProblemListParser = DefaultProblemParser
@@ -126,7 +129,7 @@ object FileConfigLoader {
         * @return 问题绑定文件路径
         */
       override def getProblemFilePath(sdk: Sdk): String = {
-        s"${new File(rootDirPath).getAbsolutePath}/$sdk/$problemConfigName"
+        s"${new File(rootDirPath).getAbsolutePath}$fileSep$sdk$fileSep$problemConfigName"
       }
     }
   }

@@ -2,6 +2,8 @@ package com.example.zhiruili.loganalyzer.logs
 
 import java.io.File
 
+import com.example.zhiruili.loganalyzer
+
 import scala.io.Source
 import scala.util.Try
 
@@ -40,7 +42,7 @@ trait LogParser {
     * @return 解析后的日志列表，可能出错
     */
   def parseFile(file: File): Try[List[LogItem]] = for {
-    lines <- Try { Source.fromFile(file).getLines().filterNot(_.matches("""\s*""")).toList }
+    lines <- Try { Source.fromFile(file)(loganalyzer.encoding).getLines().filterNot(_.matches("""\s*""")).toList }
     res <- parseLines(lines)
   } yield res
 

@@ -1,5 +1,7 @@
 package com.example.zhiruili.loganalyzer.ui
 
+import java.io.File
+
 import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer._
 import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
@@ -16,7 +18,7 @@ object AnalyzerHelper {
   val currentSdk: Sdk = ILiveSdk
   val helpBindConfigName = "_init_.json"
   val problemConfigName = "_problems_.json"
-  val configBaseDir = "./config/"
+  val configBaseDir = s"${new File("").getAbsolutePath}${fileSep}config"
   val generalCommentFileName = "_comments_.json"
   val errorCommentFileName = "_error_comments_.json"
   val configLoader: ConfigLoader = FileConfigLoader.createSimpleLoader(configBaseDir, helpBindConfigName, problemConfigName)
@@ -33,9 +35,11 @@ object AnalyzerHelper {
   // 获取指定平台的注释绑定关系
   val commentBindings: Map[Platform, CommentBindings] = {
     val loader = CommentLoader.ofFile(configBaseDir, errorCommentFileName, generalCommentFileName)
-    Map(
-      PlatformAndroid -> loader.loadCommentBindings(currentSdk, PlatformAndroid).get,
-      PlatformIOS -> loader.loadCommentBindings(currentSdk, PlatformIOS).get)
+    val androidBindings = loader.loadCommentBindings(currentSdk, PlatformAndroid)
+    println(androidBindings)
+    val iOSBindings = loader.loadCommentBindings(currentSdk, PlatformIOS)
+    println(iOSBindings)
+    Map(PlatformAndroid -> androidBindings.get, PlatformIOS -> iOSBindings.get)
   }
 
   /**

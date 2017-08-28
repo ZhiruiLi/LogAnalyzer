@@ -2,6 +2,7 @@ package com.example.zhiruili.loganalyzer.analyzer
 
 import com.example.zhiruili.loganalyzer.analyzer.LogAnalyzer.AnalyzeResult
 import AnalyzerConfig.{HelpInfo, HelpInfoBinding, ProblemTag}
+import com.example.zhiruili.loganalyzer
 import com.example.zhiruili.loganalyzer.logs.{LogItem, LogParser}
 import com.example.zhiruili.loganalyzer.rules._
 
@@ -97,7 +98,7 @@ object LogAnalyzer {
                     (problemTag: ProblemTag)
                     (filePath: String): Try[List[AnalyzeResult]] = {
     for {
-      logString <- Try { Source.fromFile(filePath).mkString }
+      logString <- Try { Source.fromFile(filePath)(loganalyzer.encoding).mkString }
       res <- analyzeLogString(logParser)(analyzer)(problemTag)(logString)
     } yield res
   }

@@ -2,6 +2,7 @@ package com.example.zhiruili.loganalyzer.rules
 
 import java.io.File
 
+import com.example.zhiruili.loganalyzer
 import com.example.zhiruili.loganalyzer.rules.RuleLoader.{NoSuchRuleException, RuleLoadingException}
 import com.example.zhiruili.loganalyzer.{Platform, Sdk, Version}
 
@@ -35,7 +36,7 @@ trait FileRuleLoader extends RuleLoader {
     if (!ruleFile.exists) {
       Failure(NoSuchRuleException(sdk, platform, version, ruleName))
     } else {
-      Try { Source.fromFile(ruleFile).mkString } match {
+      Try { Source.fromFile(ruleFile)(loganalyzer.encoding).mkString } match {
         case Failure(thw) => Failure(RuleLoadingException(sdk, platform, version, ruleName, thw))
         case success => success
       }
@@ -56,9 +57,10 @@ object FileRuleLoader {
     */
   def createSimpleLoader(rootDirPath: String, ruleParser: RuleParser): FileRuleLoader = {
     new FileRuleLoader {
+      import loganalyzer.fileSep
       override val parser: RuleParser = ruleParser
       override def getRuleFilePath(sdk: Sdk, platform: Platform, version: Version)(ruleName: String): String = {
-        s"${new File(rootDirPath).getAbsolutePath}/$sdk/$platform/$version/$ruleName.json"
+        s"${new File(rootDirPath).getAbsolutePath}$fileSep$sdk$fileSep$platform$fileSep$version$fileSep$ruleName.json"
       }
     }
   }

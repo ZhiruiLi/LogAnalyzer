@@ -1,5 +1,6 @@
 package com.example.zhiruili.loganalyzer.comment
 
+import com.example.zhiruili.loganalyzer
 import com.example.zhiruili.loganalyzer.{Platform, Sdk}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
@@ -47,11 +48,14 @@ object CommentLoader {
     new CommentLoader {
 
       def loadCommentBindings(sdk: Sdk, platform: Platform): Try[CommentBindings] = {
-        val errPath = s"""$baseDir/$errorFileName"""
-        val genPath = s"""$baseDir/$sdk/$platform/$generalFileName"""
+        import loganalyzer.fileSep
+        val errPath = s"""$baseDir$fileSep$errorFileName"""
+        val genPath = s"""$baseDir$fileSep$sdk$fileSep$platform$fileSep$generalFileName"""
+        println(s"errPath = $errPath")
+        println(s"genPath = $genPath")
         for {
-          errContent <- Try { Source.fromFile(errPath).mkString }
-          genContent <- Try { Source.fromFile(genPath).mkString }
+          errContent <- Try { Source.fromFile(errPath)(loganalyzer.encoding).mkString }
+          genContent <- Try { Source.fromFile(genPath)(loganalyzer.encoding).mkString }
           errObj <- Try { Json.parse(errContent).as[JsObject] }
           genObj <- Try { Json.parse(genContent).as[JsObject] }
           errRes <- parseErrorBindings(errObj)

@@ -1,5 +1,9 @@
 package com.example.zhiruili
 
+import java.io.File
+
+import scala.io.Codec
+
 package object loganalyzer {
 
   sealed trait Sdk
@@ -27,4 +31,9 @@ package object loganalyzer {
   }
 
   type Version = String
+
+  val fileSep: String = File.separator
+
+  val encoding: Codec = io.Codec.UTF8
+
 }
