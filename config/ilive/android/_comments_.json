@@ -69,8 +69,18 @@
     "onEndpointsUpdateInfo myself id has camera": "Server 回调用户上线（创建房间流程关键步骤 8 server 回调用户上线）",
     "renderVideoView\\-\\>enter": "渲染视频（创建房间流程关键步骤 9 渲染界面）（加入房间流程关键步骤 8 渲染界面）",
     "enable camera id\\:\\d+\\/true": "开启摄像头（创建房间关键步骤 10 摄像头上报成功回调）",
-    "ILVB-Room\\|init entered": "初始化房间",
-    "ILVB-Room\\|onDestory": "销毁房间",
+    "enable camera fail": "开启摄像头失败",
+    "no video": "没有视频流",
+    "first frame": "视频首帧事件通知",
+    "ILVB-Room\\|init entered": "初始化直播房间",
+    "ILVB-Room\\|onDestory": "直播房间管理 onDestory 回调",
+    "quitRoom\\-\\>exit Room entered": "退出直播房间",
+    "exit avroom  Complete with": "退出 av 房间成功",
+    "Remote cancel": "通话结束：对方取消",
+    "User Cancel": "通话结束：用户取消",
+    "call timeout": "通话结束：通话超时",
+    "not-found": "通话结束：找不到对应的通话",
+    "no room found": "通话结束：找不到指定的房间",
     "clearRoomRes": "清理房间资源"
   }
 }
