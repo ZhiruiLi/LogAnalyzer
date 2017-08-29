@@ -163,14 +163,13 @@ object Renderer {
       }
       box.children += renderLog(logStr, color)
       box
-    case log@EquivocalLog(originalLog, _, _, optLv, _, _, _) =>
+    case log@EquivocalLog(_, _, _, optLv, _, _, _) =>
       val color = optLv.map(levelColor).getOrElse(defaultColor)
       val logStr = Formatter.formatEquivocalLog(log)
       val box = new VBox {
         children = comments.map(str => renderLog(str, color))
       }
       box.children += renderLog(logStr, color)
-      box.children += renderSilentLog(s"    原始日志：$originalLog")
       box
     case log@UnknownLog(_) =>
       renderLog(Formatter.formatUnknownLog(log), defaultColor)
