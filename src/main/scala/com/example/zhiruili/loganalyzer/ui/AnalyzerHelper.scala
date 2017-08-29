@@ -67,19 +67,14 @@ object AnalyzerHelper {
 
   def commentLog(logItem: LogItem, platform: Platform): List[String] = logItem match {
     case LegalLog(_, _, _, lv, _, msg, ext) =>
-      val errComment = for {
-        _ <- if (lv == LvError) Some(Unit) else None
-        errCodeStr <- ext.get(LogItem.errCodeTag)
-        errCode <- Try(errCodeStr.toInt).toOption
-        errModule <- ext.get(LogItem.errModuleTag)
-        comment <- commentBindings.get(platform).flatMap(_.matchError(errCode, errModule))
-      } yield comment
-      (errComment, commentBindings.get(platform).flatMap(_.matchDistinctMessage(msg))) match {
-        case (None, None) => Nil
-        case (Some(com), None) => List(com)
-        case (None, Some(com)) => List(com)
-        case (Some(com1), Some(com2)) => List(com1, com2)
+      val optErrCode = ext.get(LogItem.errCodeTag).flatMap(code => Try(code.toInt).toOption)
+      val optErrModule = ext.get(LogItem.errModuleTag)
+      val errComments = (optErrCode, optErrModule) match {
+        case (Some(code), Some(module)) => commentBindings.get(platform).flatMap(_.matchError(code, module)).toList
+        case (Some(code), None) => commentBindings.get(platform).toList.flatMap(_.matchErrorCode(code))
+        case _ => Nil
       }
+      commentBindings.get(platform).flatMap(_.matchDistinctMessage(msg)).toList ++ errComments
     case EquivocalLog(_, _, _, optLv, _, optMsg, ext) =>
       val errComments: List[String] = (for {
         lv <- optLv
@@ -92,7 +87,7 @@ object AnalyzerHelper {
         msg <- optMsg
         binding <- commentBindings.get(platform)
       } yield binding.matchFuzzyMessage(msg)).getOrElse(Nil)
-      errComments ++ genComment
+      genComment ++ errComments
     case UnknownLog(_) => Nil
   }
 }

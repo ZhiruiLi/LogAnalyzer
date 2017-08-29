@@ -103,7 +103,7 @@ object Renderer {
       * @return 格式化字符串
       */
     def formatUnknownLog(log: UnknownLog): String = {
-      log.originalLog
+      s" ${log.originalLog}"
     }
   }
 
