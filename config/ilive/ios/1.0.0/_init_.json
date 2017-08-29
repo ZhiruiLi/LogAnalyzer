@@ -33,13 +33,23 @@
       ]
     },
     {
-      "problem": "can_not_receive_message",
-      "name": "无法接收消息",
+      "problem": "can_not_receive_or_send_message",
+      "name": "无法收发消息",
       "help_bindings": [
         {
           "rule_name": "no_set_im_listener",
           "help_message": "未能成功设置 IM 消息监听者，需要出现相关日志信息：set im listener succ",
           "help_page": "https://www.qcloud.com/document/product/268/7752"
+        },
+        {
+          "rule_name": "imsdk_10015",
+          "help_message": "加入群组时返回，意为群组 ID 不存在或找不到群组（还没创建好就加入了）。出现这种情况多为群组已删除，或者尝试加入不同 APP ID 创建的群组（服务器取到直播列表为由其它 APP ID 创建）。",
+          "help_page": "https://www.qcloud.com/document/product/269/6042"
+        },
+        {
+          "rule_name": "imsdk_10007",
+          "help_message": "缺少权限，出现这种情况有可能是因为消息发送方不是群成员，仅 AVChatRoom 允许非群成员发言，Public、Private、ChatRoom 都需要是群成员才能发送消息。",
+          "help_page": "https://www.qcloud.com/document/product/269/1671"
         }
       ]
     },
@@ -73,6 +83,39 @@
           "rule_name": "no_create_instance",
           "help_message": "未能成功创建相关实例，需要出现相关日志：create instance succ",
           "help_page": "https://www.qcloud.com/document/product/268/7752"
+        }
+      ]
+    },
+    {
+      "problem": "login_fail",
+      "name": "登录失败",
+      "help_bindings": [
+        {
+          "rule_name": "avsdk_10004",
+          "help_message": "切换帐号或者被踢时，记得登出之后才能登录",
+          "help_page": "https://github.com/zhaoyang21cn/iLiveSDK_Android_Suixinbo/blob/master/doc/ILiveSDK/avsdkErr.md"
+        }
+      ]
+    },
+    {
+      "problem": "enter_room_fail",
+      "name": "进房间失败",
+      "help_bindings": [
+        {
+          "rule_name": "avsdk_10005",
+          "help_message": "先确定一下主播是否还是房间里，房间是否还存在，30s 内主播内没上行房间就会解散，观众进入不存在的房间，又没有创建房间的权限就会报错。",
+          "help_page": "https://github.com/zhaoyang21cn/iLiveSDK_Android_Suixinbo/blob/master/doc/ILiveSDK/avsdkErr.md"
+        }
+      ]
+    },
+    {
+      "problem": "enter_im_group_fail",
+      "name": "加入 IM 群组失败",
+      "help_bindings": [
+        {
+          "rule_name": "imsdk_10015",
+          "help_message": "加入群组时返回，意为群组 ID 不存在或找不到群组（还没创建好就加入了）。出现这种情况多为群组已删除，或者尝试加入不同 APP ID 创建的群组（服务器取到直播列表为由其它 APP ID 创建）。",
+          "help_page": "https://www.qcloud.com/document/product/269/6042"
         }
       ]
     }

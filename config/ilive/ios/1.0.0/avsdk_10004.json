@@ -1,0 +1,12 @@
+{
+  "type": "appear",
+  "times": 1,
+  "rule": {
+    "type": "match",
+    "comment": "av sdk error 10004",
+    "extra": {
+      "errCode": "10004",
+      "module": "AVSDK"
+    }
+  }
+}

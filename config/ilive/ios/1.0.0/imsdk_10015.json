@@ -1,0 +1,12 @@
+{
+  "type": "appear",
+  "times": 1,
+  "rule": {
+    "type": "match",
+    "comment": "im sdk error 10015",
+    "extra": {
+      "errCode": "10015",
+      "module": "IMSDK"
+    }
+  }
+}

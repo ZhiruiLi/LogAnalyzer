@@ -1,0 +1,12 @@
+{
+  "type": "appear",
+  "times": 1,
+  "rule": {
+    "type": "match",
+    "comment": "im sdk error 10007",
+    "extra": {
+      "errCode": "10007",
+      "module": "IMSDK"
+    }
+  }
+}

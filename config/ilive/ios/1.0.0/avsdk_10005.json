@@ -1,0 +1,12 @@
+{
+  "type": "appear",
+  "times": 1,
+  "rule": {
+    "type": "match",
+    "comment": "av sdk error 10005",
+    "extra": {
+      "errCode": "10005",
+      "module": "AVSDK"
+    }
+  }
+}
