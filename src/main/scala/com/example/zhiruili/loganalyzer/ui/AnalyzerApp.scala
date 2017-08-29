@@ -1,5 +1,7 @@
 package com.example.zhiruili.loganalyzer.ui
 
+import java.io.File
+
 import com.example.zhiruili.loganalyzer._
 import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer.logs._
@@ -17,7 +19,7 @@ import scalafx.scene.layout.{BorderPane, VBox}
 import scalafx.stage.FileChooser
 import scalafx.event.ActionEvent
 import scalafx.scene.control._
-import scalafx.scene.input.KeyEvent
+import scalafx.scene.input.{DragEvent, KeyEvent, TransferMode}
 import scalafx.scene.text.{Text, TextFlow}
 
 object AnalyzerApp extends JFXApp {
@@ -36,6 +38,16 @@ object AnalyzerApp extends JFXApp {
 
   def selectedPlatform: Platform = platforms(platformChoiceBox.selectionModel().getSelectedIndex)
 
+  def loadLogFile(file: File): Unit = {
+    AnalyzerHelper.platformToLogParser(selectedPlatform).parseFile(file) match {
+      case Success(items) =>
+        logList() = items
+        fileHintLabel.text = file.getAbsolutePath
+      case Failure(error) =>
+        fileHintLabel.text = error.getMessage
+    }
+  }
+
   // --------------- 原始日志信息 ------------------
 
   val originalLogsContainer = new VBox {
@@ -44,6 +56,9 @@ object AnalyzerApp extends JFXApp {
 
   // 所有日志项
   val logList: ObjectProperty[List[LogItem]] = ObjectProperty(Nil)
+
+  // 读取成功后清理帮助信息
+  logList.onChange { clearHelpInfos() }
 
   // 错误信息
   val errMessage: StringProperty = StringProperty("")
@@ -69,13 +84,7 @@ object AnalyzerApp extends JFXApp {
       val chooser = new FileChooser
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
-        AnalyzerHelper.platformToLogParser(selectedPlatform).parseFile(selectedFile) match {
-          case Success(items) =>
-            logList() = items
-            fileHintLabel.text = selectedFile.getAbsolutePath
-          case Failure(error) =>
-            fileHintLabel.text = error.getMessage
-        }
+        loadLogFile(selectedFile)
       } else {
         fileHintLabel.text() = defaultLabelText
       }
@@ -207,6 +216,10 @@ object AnalyzerApp extends JFXApp {
   // 帮助信息
   val optHelpInfos: ObjectProperty[Option[List[(HelpInfo, List[LogItem])]]] = ObjectProperty(None)
 
+  def clearHelpInfos(): Unit = {
+    optHelpInfos() = None
+  }
+
   // 显示在 analyze result 区域的节点
   val analyzeResultShowNodes: ObjectProperty[List[Node]] = ObjectProperty(Nil)
 
@@ -265,7 +278,7 @@ object AnalyzerApp extends JFXApp {
 
   val clearAnalyzeResultButton = new Button {
     text = "清空帮助信息"
-    onAction = { _: ActionEvent => optHelpInfos() = None }
+    onAction = { _: ActionEvent => clearHelpInfos() }
   }
 
   // --------------- 主界面 ---------------------
@@ -319,6 +332,19 @@ object AnalyzerApp extends JFXApp {
         if (isMac) getClass.getResource("osx.css").toExternalForm
         else getClass.getResource("win.css").toExternalForm
       )
+      onDragOver = { event: DragEvent =>
+        if(event.dragboard.hasFiles) {
+          event.acceptTransferModes(TransferMode.Copy)
+        } else {
+          event.consume()
+        }
+      }
+      onDragDropped = { event: DragEvent =>
+        val optFile = event.dragboard.files.toList.headOption
+        optFile.foreach(loadLogFile)
+        event.setDropCompleted(optFile.isDefined)
+        event.consume()
+      }
     }
   }
   if (isMac) {
