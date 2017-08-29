@@ -38,7 +38,9 @@ object AnalyzerApp extends JFXApp {
 
   // --------------- 原始日志信息 ------------------
 
-  val originalLogsContainer = new VBox
+  val originalLogsContainer = new VBox {
+    id = "original-logs-container"
+  }
 
   // 所有日志项
   val logList: ObjectProperty[List[LogItem]] = ObjectProperty(Nil)
@@ -67,7 +69,6 @@ object AnalyzerApp extends JFXApp {
       val chooser = new FileChooser
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
-        println(selectedFile)
         AnalyzerHelper.platformToLogParser(selectedPlatform).parseFile(selectedFile) match {
           case Success(items) =>
             logList() = items
@@ -303,6 +304,8 @@ object AnalyzerApp extends JFXApp {
     }
   }
 
+  val isMac: Boolean = System.getProperty("os.name").startsWith("Mac")
+
   stage = new JFXApp.PrimaryStage {
     title.value = "日志分析器"
     width = 1024
@@ -311,9 +314,18 @@ object AnalyzerApp extends JFXApp {
     minHeight = 300
     scene = new Scene {
       content = mainContainer
-      stylesheets = Seq(getClass.getResource("main.css").toExternalForm)
+      stylesheets = Seq(
+        getClass.getResource("main.css").toExternalForm,
+        if (isMac) getClass.getResource("osx.css").toExternalForm
+        else getClass.getResource("win.css").toExternalForm
+      )
     }
   }
-  mainContainer.prefWidth <== stage.width
-  mainContainer.prefHeight <== stage.height - 22
+  if (isMac) {
+    mainContainer.prefWidth <== stage.width
+    mainContainer.prefHeight <== stage.height - 22
+  } else {
+    mainContainer.prefWidth <== stage.width - 15
+    mainContainer.prefHeight <== stage.height - 22 - 15
+  }
 }

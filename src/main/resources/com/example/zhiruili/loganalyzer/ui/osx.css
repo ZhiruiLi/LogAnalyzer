@@ -1,0 +1,13 @@
+.log {
+  -fx-font-family: Menlo, monospace;
+  -fx-font-size: 10pt;
+}
+
+.log-silent {
+  -fx-font-family: Menlo, monospace;
+  -fx-font-size: 9pt;
+}
+
+#original-logs-container {
+  -fx-padding: 0 0 0 0;
+}

@@ -36,9 +36,7 @@ object AnalyzerHelper {
   val commentBindings: Map[Platform, CommentBindings] = {
     val loader = CommentLoader.ofFile(configBaseDir, errorCommentFileName, generalCommentFileName)
     val androidBindings = loader.loadCommentBindings(currentSdk, PlatformAndroid)
-    println(androidBindings)
     val iOSBindings = loader.loadCommentBindings(currentSdk, PlatformIOS)
-    println(iOSBindings)
     Map(PlatformAndroid -> androidBindings.get, PlatformIOS -> iOSBindings.get)
   }
 

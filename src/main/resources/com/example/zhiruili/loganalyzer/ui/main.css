@@ -8,16 +8,6 @@ ScrollPane {
   -fx-font-size: 12pt;
 }
 
-.log {
-  -fx-font-family: Menlo, Consolas, Monospace;
-  -fx-font-size: 10pt;
-}
-
-.log-silent {
-  -fx-font-family: Menlo, Consolas, Monospace;
-  -fx-font-size: 9pt;
-}
-
 .container-box {
   -fx-padding: 10 20 0 20;
   -fx-spacing: 10;

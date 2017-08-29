@@ -51,8 +51,6 @@ object CommentLoader {
         import loganalyzer.fileSep
         val errPath = s"""$baseDir$fileSep$errorFileName"""
         val genPath = s"""$baseDir$fileSep$sdk$fileSep$platform$fileSep$generalFileName"""
-        println(s"errPath = $errPath")
-        println(s"genPath = $genPath")
         for {
           errContent <- Try { Source.fromFile(errPath)(loganalyzer.encoding).mkString }
           genContent <- Try { Source.fromFile(genPath)(loganalyzer.encoding).mkString }
