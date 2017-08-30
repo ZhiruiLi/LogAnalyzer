@@ -217,14 +217,48 @@ object Renderer {
   case class RichLog(item: LogItem, comments: List[String])
   case class RenderedLog(item: LogItem, htmlString: String)
 
+  val levelToCssClassMap: Map[LogLevel, String] = Map(
+    LvVerbose -> "log-verbose",
+    LvDebug -> "log-debug",
+    LvInfo -> "log-info",
+    LvWarn -> "log-warn",
+    LvError -> "log-error"
+  )
+  def levelToCssClass(lv: LogLevel): String = levelToCssClassMap.getOrElse(lv, "log-default")
+
   def renderRichLogToHtml(log: RichLog): String = {
-    s"""<p><font>${(log.item.toString::log.comments).mkString("<br/>")}</font></p>"""
+    /*val logString = log.item match {
+      case log@LegalLog(_, _, _, lv, _, _, _) =>
+        val color = levelColor(lv)
+        val logStr = Formatter.formatLegalLog(log)
+        val box = new VBox {
+          children = comments.map(str => renderLog(str, color))
+        }
+        box.children += renderLog(logStr, color)
+        box
+      case log@EquivocalLog(_, _, _, optLv, _, _, _) =>
+        val color = optLv.map(levelColor).getOrElse(defaultColor)
+        val logStr = Formatter.formatEquivocalLog(log)
+        val box = new VBox {
+          children = comments.map(str => renderLog(str, color))
+        }
+        box.children += renderLog(logStr, color)
+        box
+      case log@UnknownLog(_) =>
+        renderLog(Formatter.formatUnknownLog(log), defaultColor)
+    }*/
+    s"""
+       |<div class="rich-log-item"><font>${(log.item.toString::log.comments).mkString("<br/>")}</font></div>
+     """.stripMargin
   }
 
-  def renderLogPanel(renderedLogs: List[RenderedLog]): Node = {
-    val webView = new WebView
-    webView.engine.loadContent(s"""<body><div>${renderedLogs.map(_.htmlString).mkString("<br/>")}</div></body>""")
-    webView.onclick
-    webView
+  def composeRenderedLogs(renderedLogs: List[RenderedLog]): String = {
+    s"""
+       |<html>
+       |<body>
+       |  <pre>${renderedLogs.map(_.htmlString).mkString}</pre>
+       |</body>
+       |</html>
+     """.stripMargin
   }
 }

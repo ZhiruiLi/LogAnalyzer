@@ -81,18 +81,11 @@ object AnalyzerApp extends JFXApp {
 
   // --------------- 原始日志信息 ------------------
 
-  val originalLogsContainer = new VBox {
-    id = "original-logs-container"
-  }
-
   // 所有日志项
   val logList: ObjectProperty[List[LogItem]] = ObjectProperty(Nil)
 
   // 读取成功后清理帮助信息
   logList.onChange { clearHelpInfos() }
-
-  // 显示在 original log 区域的节点
-  val originalLogShowNodes: ObjectProperty[List[Node]] = ObjectProperty(Nil)
 
   val defaultLabelText = "请选择日志文件"
   val fileHintLabel = Label(defaultLabelText)
@@ -110,36 +103,19 @@ object AnalyzerApp extends JFXApp {
     }
   }
 
-  val originalLogNode: ObjectProperty[Node] = ObjectProperty[Node](new WebView)
+  val originalLogView = new WebView
+  originalLogView.engine.setUserStyleSheetLocation(getClass.getResource("web.css").toString)
 
   val richLogs: ObjectBinding[List[RichLog]] = createObjectBinding(() => {
     logList().map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform)))
   }, logList)
 
   val renderedLogs: ObjectBinding[List[RenderedLog]] = createObjectBinding(() => {
-    richLogs().map(log => (log, AnalyzerHelper.commentLog(log, selectedPlatform)))
-  }, logList)
-
-  richLogs.onChange {
-    originalLogNode() = Renderer.renderLogPanel(richLogs())
-  }
-
-  // 带有注释的日志项
-  val allLogsWithComment: ObjectBinding[List[(LogItem, List[String])]] = createObjectBinding(() => {
-    logList().map(log => (log, AnalyzerHelper.commentLog(log, selectedPlatform)))
-  }, logList)
-
-  // 渲染后的日志项
-  val renderedLogs: ObjectBinding[List[(LogItem, Node)]] = createObjectBinding(() => {
-    allLogsWithComment().map { case (log, comments) => (log, Renderer.renderRichLog(log, comments)) }
-  }, allLogsWithComment)
+    richLogs().map(log => RenderedLog(log.item, Renderer.renderRichLogToHtml(log)))
+  }, richLogs)
 
   renderedLogs.onChange {
-    updateOriginLogList()
-  }
-
-  originalLogShowNodes.onChange {
-    originalLogsContainer.children = originalLogShowNodes()
+    originalLogView.engine.loadContent(Renderer.composeRenderedLogs(renderedLogs()))
   }
 
   val filterIsUpdated = BooleanProperty(false)
@@ -201,7 +177,8 @@ object AnalyzerApp extends JFXApp {
 
   // 更新日志浏览区域的日志内容
   def updateOriginLogList(): Unit = {
-    val logsAfterFilter =
+    println("update!")
+    /*val logsAfterFilter =
       logs.Utils.timeFilter(originLogStartTimeTextField.getTime, originLogEndTimeTextField.getTime)(renderedLogs())
     val matchRegex = (str: String, regexStr: String) => regexStr.r.findFirstIn(str).nonEmpty
     val newNodes: List[Node] = logsAfterFilter
@@ -222,9 +199,7 @@ object AnalyzerApp extends JFXApp {
           includeUnknown &&
             testIfDefined(Some(log), filterPosition, matchRegex) &&
             testIfDefined(Some(log), filterMessage, matchRegex)
-      }
-      .map(_._2)
-    originalLogShowNodes() = newNodes
+      }*/
   }
 
   // 监视日志过滤选项的刷新
@@ -342,7 +317,7 @@ object AnalyzerApp extends JFXApp {
       )
       center = new ScrollPane {
         id = "log-scroll-pane"
-        content = originalLogsContainer
+        content = originalLogView
       }
       bottom = globalInfoView
     }
