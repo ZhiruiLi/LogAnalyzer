@@ -18,4 +18,4 @@ unmanagedJars in Compile += {
 }
 
 assemblyOutputPath in assembly := new File(s".${java.io.File.separator}run.jar")
-mainClass in assembly := Some("src.main.scala.com.example.zhiruili.loganalyzer.ui.AnalyzerApp")
+mainClass in assembly := Some("com.example.zhiruili.loganalyzer.ui.AnalyzerApp")
