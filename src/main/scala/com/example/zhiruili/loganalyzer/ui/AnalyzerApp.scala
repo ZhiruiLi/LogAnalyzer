@@ -7,10 +7,13 @@ import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, Probl
 import com.example.zhiruili.loganalyzer.logs._
 import com.example.zhiruili.utils.Utils._
 
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 import scalafx.Includes._
 import scalafx.animation.{KeyFrame, Timeline}
-import scalafx.application.JFXApp
+import scalafx.application.{JFXApp, Platform}
 import scalafx.beans.binding.{Bindings, BooleanBinding, ObjectBinding}
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
@@ -39,13 +42,40 @@ object AnalyzerApp extends JFXApp {
   def selectedPlatform: Platform = platforms(platformChoiceBox.selectionModel().getSelectedIndex)
 
   def loadLogFile(file: File): Unit = {
-    AnalyzerHelper.platformToLogParser(selectedPlatform).parseFile(file) match {
-      case Success(items) =>
-        logList() = items
-        fileHintLabel.text = file.getAbsolutePath
-      case Failure(error) =>
-        fileHintLabel.text = error.getMessage
+    putGlobalInfo(s"正在读取文件：${file.getName}")
+    val future = Future {
+      AnalyzerHelper.platformToLogParser(selectedPlatform).parseFile(file).get
     }
+    future.onComplete { res => Platform.runLater {
+      res match {
+        case Success(items) =>
+          fileHintLabel.text = file.getAbsolutePath
+          putGlobalInfoAutoClear(s"读取文件 ${file.getName} 成功", 1.second)
+          logList() = items
+        case Failure(error) =>
+          fileHintLabel.text = error.getMessage
+          putGlobalInfo(s"读取文件 ${file.getName} 失败")
+      }
+    }}
+  }
+
+  // 全局消息
+  val globalInfoText: StringProperty = StringProperty("")
+  val globalInfoView = new TextFlow {
+    id = "global-info-view"
+    children = Seq(new Text { text <== globalInfoText })
+  }
+  def putGlobalInfo(str: String): Unit = {
+    globalInfoText() = str
+  }
+  def putGlobalInfoAutoClear(str: String, duration: Duration): Unit = {
+    globalInfoText() = str
+    Utils.runDelay(duration) {
+      if (globalInfoText() == str) clearGlobalInfo()
+    }
+  }
+  def clearGlobalInfo(): Unit = {
+    globalInfoText() = ""
   }
 
   // --------------- 原始日志信息 ------------------
@@ -60,18 +90,6 @@ object AnalyzerApp extends JFXApp {
   // 读取成功后清理帮助信息
   logList.onChange { clearHelpInfos() }
 
-  // 错误信息
-  val errMessage: StringProperty = StringProperty("")
-  val errMessageText = new TextFlow(
-    new Text { text <== errMessage }
-  )
-  def setError(str: String): Unit = {
-    errMessage() = str
-  }
-  def clearError(): Unit = {
-    errMessage() = ""
-  }
-
   // 显示在 original log 区域的节点
   val originalLogShowNodes: ObjectProperty[List[Node]] = ObjectProperty(Nil)
 
@@ -80,7 +98,7 @@ object AnalyzerApp extends JFXApp {
   val loadFileButton = new Button {
     text = "导入本地日志文件"
     onAction = (_: ActionEvent) => {
-      clearError()
+      clearGlobalInfo()
       val chooser = new FileChooser
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
@@ -102,12 +120,12 @@ object AnalyzerApp extends JFXApp {
   }, allLogsWithComment)
 
   renderedLogs.onChange {
-    clearError()
+    clearGlobalInfo()
     updateOriginLogList()
   }
 
   originalLogShowNodes.onChange {
-    clearError()
+    clearGlobalInfo()
     originalLogsContainer.children = originalLogShowNodes()
   }
 
@@ -248,7 +266,7 @@ object AnalyzerApp extends JFXApp {
   val problems: List[Problem] = AnalyzerHelper.loadProblemList match {
     case Success(lst) => lst
     case Failure(thw) =>
-      setError(thw.getMessage)
+      putGlobalInfo(thw.getMessage)
       Nil
   }
   val problemChoiceBox = new ChoiceBox(ObservableBuffer(problems.map(_.name)))
@@ -271,7 +289,7 @@ object AnalyzerApp extends JFXApp {
           val helpInfoList = resultList.map(res => (res.helpInfo, res.relatedLogs))
           optHelpInfos() = Some(helpInfoList)
         case Failure(thw) =>
-          setError(thw.getMessage)
+          putGlobalInfo(thw.getMessage)
       }
     }
   }
@@ -313,7 +331,7 @@ object AnalyzerApp extends JFXApp {
         id = "log-scroll-pane"
         content = originalLogsContainer
       }
-      bottom = errMessageText
+      bottom = globalInfoView
     }
   }
 

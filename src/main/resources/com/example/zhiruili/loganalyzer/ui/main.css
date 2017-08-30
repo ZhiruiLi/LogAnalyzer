@@ -34,3 +34,7 @@ ScrollPane {
   -fx-padding: 5 0 0 20;
   -fx-margin: 0 0 0 0;
 }
+
+#global-info-view {
+  -fx-padding: 0 5 0 5;
+}
