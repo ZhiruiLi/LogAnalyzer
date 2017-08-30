@@ -17,6 +17,7 @@ import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color._
 import scalafx.scene.text.{Text, TextFlow}
+import scalafx.scene.web.WebView
 
 /**
   * 渲染相关
@@ -211,5 +212,19 @@ object Renderer {
       spacing = 5
       children = lbHelpMsg::tailNodes
     }
+  }
+
+  case class RichLog(item: LogItem, comments: List[String])
+  case class RenderedLog(item: LogItem, htmlString: String)
+
+  def renderRichLogToHtml(log: RichLog): String = {
+    s"""<p><font>${(log.item.toString::log.comments).mkString("<br/>")}</font></p>"""
+  }
+
+  def renderLogPanel(renderedLogs: List[RenderedLog]): Node = {
+    val webView = new WebView
+    webView.engine.loadContent(s"""<body><div>${renderedLogs.map(_.htmlString).mkString("<br/>")}</div></body>""")
+    webView.onclick
+    webView
   }
 }

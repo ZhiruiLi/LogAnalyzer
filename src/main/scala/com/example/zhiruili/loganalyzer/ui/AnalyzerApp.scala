@@ -5,6 +5,7 @@ import java.io.File
 import com.example.zhiruili.loganalyzer._
 import com.example.zhiruili.loganalyzer.analyzer.AnalyzerConfig.{HelpInfo, Problem, ProblemTag}
 import com.example.zhiruili.loganalyzer.logs._
+import com.example.zhiruili.loganalyzer.ui.Renderer.{RenderedLog, RichLog}
 import com.example.zhiruili.utils.Utils._
 
 import scala.concurrent.duration._
@@ -24,6 +25,7 @@ import scalafx.event.ActionEvent
 import scalafx.scene.control._
 import scalafx.scene.input.{DragEvent, KeyEvent, TransferMode}
 import scalafx.scene.text.{Text, TextFlow}
+import scalafx.scene.web.WebView
 
 object AnalyzerApp extends JFXApp {
 
@@ -106,6 +108,20 @@ object AnalyzerApp extends JFXApp {
         fileHintLabel.text() = defaultLabelText
       }
     }
+  }
+
+  val originalLogNode: ObjectProperty[Node] = ObjectProperty[Node](new WebView)
+
+  val richLogs: ObjectBinding[List[RichLog]] = createObjectBinding(() => {
+    logList().map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform)))
+  }, logList)
+
+  val renderedLogs: ObjectBinding[List[RenderedLog]] = createObjectBinding(() => {
+    richLogs().map(log => (log, AnalyzerHelper.commentLog(log, selectedPlatform)))
+  }, logList)
+
+  richLogs.onChange {
+    originalLogNode() = Renderer.renderLogPanel(richLogs())
   }
 
   // 带有注释的日志项
