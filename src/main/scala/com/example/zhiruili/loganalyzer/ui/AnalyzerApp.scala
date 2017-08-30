@@ -50,11 +50,10 @@ object AnalyzerApp extends JFXApp {
       res match {
         case Success(items) =>
           fileHintLabel.text = file.getAbsolutePath
-          putGlobalInfoAutoClear(s"读取文件 ${file.getName} 成功", 1.second)
+          putGlobalInfoAutoClear(s"读取文件 ${file.getName} 成功", 3.second)
           logList() = items
         case Failure(error) =>
-          fileHintLabel.text = error.getMessage
-          putGlobalInfo(s"读取文件 ${file.getName} 失败")
+          putGlobalInfo(s"读取文件 ${file.getName} 失败: ${error.getMessage}")
       }
     }}
   }
@@ -120,12 +119,10 @@ object AnalyzerApp extends JFXApp {
   }, allLogsWithComment)
 
   renderedLogs.onChange {
-    clearGlobalInfo()
     updateOriginLogList()
   }
 
   originalLogShowNodes.onChange {
-    clearGlobalInfo()
     originalLogsContainer.children = originalLogShowNodes()
   }
 
