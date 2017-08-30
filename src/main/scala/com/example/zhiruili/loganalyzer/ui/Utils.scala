@@ -2,7 +2,6 @@ package com.example.zhiruili.loganalyzer.ui
 
 import scala.concurrent.duration.Duration
 import scalafx.application.Platform
-import scalafx.concurrent.Task
 import scalafx.scene.control.{Control, Tooltip}
 
 object Utils {

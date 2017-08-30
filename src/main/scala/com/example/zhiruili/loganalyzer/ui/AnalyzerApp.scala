@@ -96,7 +96,7 @@ object AnalyzerApp extends JFXApp {
   val fileHintLabel = Label(defaultLabelText)
   val loadFileButton = new Button {
     text = "导入本地日志文件"
-    onAction = (_: ActionEvent) => {
+    onAction = { _: ActionEvent =>
       clearGlobalInfo()
       val chooser = new FileChooser
       val selectedFile = chooser.showOpenDialog(stage)
