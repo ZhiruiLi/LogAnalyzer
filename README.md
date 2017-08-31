@@ -1,6 +1,6 @@
-# 日志分析工具
+# iLive SDK 日志分析工具
 
-[iLive SDK](https://www.qcloud.com/product/ilvb) 日志分析工具，能根据日志内容进行筛选和注释，同时能分析一些简单问题
+[iLive SDK](https://www.qcloud.com/product/ilvb) 日志分析工具，能根据日志内容进行筛选和注释，同时能分析一些简单问题。
 
 ## 工程配置方法
 
@@ -26,7 +26,7 @@ sbt assembly
 
 这将在工程目录下生成 `run.jar` 文件，双击即可运行。
 
-**Tips**: 在内网中使用的时候，sbt 需要设置代理服务器才能正确获取依赖。
+**Tips**: 在内网中使用的时候，sbt 需要设置代理服务器才能正确获取依赖，例如：
 
 Windows:
 
@@ -35,7 +35,7 @@ set JAVA_OPTS=-Dhttps.proxyHost=dev-proxy.oa.com -Dhttps.proxyPort=8080
 sbt run
 ```
 
-OSX:
+OS X:
 
 ```
 export JAVA_OPTS="$JAVA_OPTS -Dhttps.proxyHost=dev-proxy.oa.com -Dhttps.proxyPort=8080"
@@ -104,7 +104,7 @@ sbt run
 
   - 运行程序直接崩溃是怎么回事？
 
-    有可能是 Java 环境没有配置对，Mac 用户可以试试在命令行下使用 `java -jar run.jar`，Windows 用户可以试试在命令行下使用 `java -jar .\run.jar` 看是否能运行。另外要注意将 config 文件夹和 run.jar 放在同一路径下，程序的执行需要依赖 config 里的配置文件。
+    有可能是 Java 环境没有配置对，OS X 用户可以试试在命令行下使用 `java -jar run.jar`，Windows 用户可以试试在命令行下使用 `java -jar .\run.jar` 看是否能运行。另外要注意将 config 文件夹和 run.jar 放在同一路径下，程序的执行需要依赖 config 里的配置文件。
 
   - 如果有问题或者改进意见如何发表？
 
