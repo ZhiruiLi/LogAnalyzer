@@ -29,14 +29,15 @@ import scalafx.scene.web.WebView
 
 object AnalyzerApp extends JFXApp {
 
+  // --------------- 公用 ------------------------
+
   object Implicits {
     implicit val logItemPairAsLogItem: ((LogItem, Node)) => LogItem = _._1
     implicit val renderedLogAsLogItem: RenderedLog => LogItem = _.item
   }
 
   import Implicits._
-
-  // --------------- 公用 ------------------------
+  import UIHelper._
 
   val platformChoiceBox = new ChoiceBox(ObservableBuffer("Android", "iOS"))
   platformChoiceBox.selectionModel().selectFirst()
@@ -44,21 +45,24 @@ object AnalyzerApp extends JFXApp {
 
   def selectedPlatform: Platform = platforms(platformChoiceBox.selectionModel().getSelectedIndex)
 
+  /**
+    * 加载日志文件
+    *
+    * @param file 日志文件
+    */
   def loadLogFile(file: File): Unit = {
-    putGlobalInfo(s"正在读取文件：${file.getName}")
-    val future = Future {
+    putGlobalInfo(s"正在读取文件：${file.getName}，请稍候……")
+    Future {
       AnalyzerHelper.platformToLogParser(selectedPlatform).parseFile(file).get
-    }
-    future.onComplete { res => Platform.runLater {
-      res match {
-        case Success(items) =>
+    }.onComplete {
+      case Success(items) =>
+        Platform.runLater {
           fileHintLabel.text = file.getAbsolutePath
-          putGlobalInfoAutoClear(s"读取文件 ${file.getName} 成功", 3.second)
           logList() = items
-        case Failure(error) =>
-          putGlobalInfo(s"读取文件 ${file.getName} 失败: ${error.getMessage}")
-      }
-    }}
+        }
+      case Failure(error) =>
+        putGlobalInfo(s"读取文件 ${file.getName} 失败: ${error.getMessage}")
+    }
   }
 
   // 全局消息
@@ -68,16 +72,16 @@ object AnalyzerApp extends JFXApp {
     children = Seq(new Text { text <== globalInfoText })
   }
   def putGlobalInfo(str: String): Unit = {
-    globalInfoText() = str
+    Platform.runLater(globalInfoText() = str)
   }
   def putGlobalInfoAutoClear(str: String, duration: Duration): Unit = {
-    globalInfoText() = str
+    Platform.runLater(globalInfoText() = str)
     Utils.runDelay(duration) {
       if (globalInfoText() == str) clearGlobalInfo()
     }
   }
   def clearGlobalInfo(): Unit = {
-    globalInfoText() = ""
+    Platform.runLater(globalInfoText() = "")
   }
 
   // --------------- 原始日志信息 ------------------
@@ -85,12 +89,26 @@ object AnalyzerApp extends JFXApp {
   // 所有日志项
   val logList: ObjectProperty[List[LogItem]] = ObjectProperty(Nil)
 
-  // 读取成功后清理帮助信息
-  logList.onChange { clearHelpInfos() }
+  logList.onChange {
+    // 读取成功后清理帮助信息
+    clearHelpInfos()
+    putGlobalInfo("正在解析日志，请稍候……")
+    Future {
+      logList()
+        .map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform)))
+        .map(log => RenderedLog(log.item, Renderer.renderRichLogToHtml(log)))
+    }.onComplete {
+      case Success(res) =>
+        clearGlobalInfo()
+        Platform.runLater(renderedLogs() = res)
+      case Failure(err) =>
+        putGlobalInfo(err.getMessage)
+    }
+  }
 
-  val defaultLabelText = "请选择日志文件"
-  val fileHintLabel = Label(defaultLabelText)
-  val loadFileButton = new Button {
+  val defaultFileHint: String = "请选择日志文件"
+  val fileHintLabel: Label = baseLabel(defaultFileHint)
+  val loadFileButton: Button = new Button {
     text = "导入本地日志文件"
     onAction = { _: ActionEvent =>
       clearGlobalInfo()
@@ -101,7 +119,7 @@ object AnalyzerApp extends JFXApp {
       if (selectedFile != null) {
         loadLogFile(selectedFile)
       } else {
-        fileHintLabel.text() = defaultLabelText
+        fileHintLabel.text() = defaultFileHint
       }
     }
   }
@@ -111,20 +129,27 @@ object AnalyzerApp extends JFXApp {
   originalLogView.engine.setUserStyleSheetLocation(getClass.getResource("web.css").toString)
 
   // 渲染后的日志
-  val renderedLogs: ObjectBinding[List[RenderedLog]] = createObjectBinding(() => {
-    logList()
-      .map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform)))
-      .map(log => RenderedLog(log.item, Renderer.renderRichLogToHtml(log)))
-  }, logList)
+  val renderedLogs: ObjectProperty[List[RenderedLog]] = ObjectProperty(Nil)
 
   // 显示的日志
   val showLogs: ObjectProperty[List[RenderedLog]] = ObjectProperty(Nil)
   showLogs.onChange {
-    originalLogView.engine.loadContent(Renderer.composeRenderedLogs(showLogs()))
+    putGlobalInfo("正在渲染日志，请稍候……")
+    Future {
+      Renderer.composeRenderedLogs(showLogs())
+    }.onComplete {
+      case Success(res) =>
+        Platform.runLater {
+          clearGlobalInfo()
+          originalLogView.engine.loadContent(res)
+        }
+      case Failure(err) => putGlobalInfo(err.getMessage)
+    }
   }
 
+  // 渲染日志成功后更新 originalLogView
   renderedLogs.onChange {
-    updateOriginLogList()
+    updateOriginLogView()
   }
 
   val filterIsUpdated = BooleanProperty(false)
@@ -185,7 +210,7 @@ object AnalyzerApp extends JFXApp {
   val originLogEndTimeTextField: DateTimeTextField = DateTimeTextField(doOnInputLegal = Some(() => setFilterExpired()))
 
   // 更新日志浏览区域的日志内容
-  def updateOriginLogList(): Unit = {
+  def updateOriginLogView(): Unit = {
     val logsAfterFilter =
       logs.Utils.timeFilter(originLogStartTimeTextField.getTime, originLogEndTimeTextField.getTime)(renderedLogs())
     val matchRegex = (str: String, regexStr: String) => regexStr.r.findFirstIn(str).nonEmpty
@@ -214,7 +239,7 @@ object AnalyzerApp extends JFXApp {
   val refreshChecker: (ActionEvent) => Unit = { _ =>
     if (filterIsUpdated()) {
       filterIsUpdated() = false
-      updateOriginLogList()
+      updateOriginLogView()
     }
   }
   val filterChecker = Timeline(KeyFrame(500.ms, "", refreshChecker))
@@ -296,8 +321,6 @@ object AnalyzerApp extends JFXApp {
   }
 
   // --------------- 主界面 ---------------------
-
-  import UIHelper._
 
   val mainContainer = new BorderPane {
     top = vBoxContainer(
