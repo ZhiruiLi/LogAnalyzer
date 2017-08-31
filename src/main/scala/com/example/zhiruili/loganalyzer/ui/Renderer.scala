@@ -224,39 +224,31 @@ object Renderer {
     LvWarn -> "log-warn",
     LvError -> "log-error"
   )
-  def levelToCssClass(lv: LogLevel): String = levelToCssClassMap.getOrElse(lv, "log-default")
+  val defaultLogCssClass: String = "log-default"
+  def levelToCssClass(lv: LogLevel): String = levelToCssClassMap.getOrElse(lv, defaultLogCssClass)
 
-  def renderRichLogToHtml(log: RichLog): String = {
-    /*val logString = log.item match {
+  def renderRichLogToHtml(richLog: RichLog): String = {
+    def renderHelper(logString: String, comments: List[String], cssClass: String): String = {
+      val sep = if (comments.isEmpty) "" else "<br/>"
+      s"""<div class="rich-log-item"><font class="$cssClass">${comments.mkString("<br/>")}$sep$logString</font></div>"""
+    }
+    richLog.item match {
       case log@LegalLog(_, _, _, lv, _, _, _) =>
-        val color = levelColor(lv)
-        val logStr = Formatter.formatLegalLog(log)
-        val box = new VBox {
-          children = comments.map(str => renderLog(str, color))
-        }
-        box.children += renderLog(logStr, color)
-        box
+        val cssClass = levelToCssClass(lv)
+        renderHelper(Formatter.formatLegalLog(log), richLog.comments, cssClass)
       case log@EquivocalLog(_, _, _, optLv, _, _, _) =>
-        val color = optLv.map(levelColor).getOrElse(defaultColor)
-        val logStr = Formatter.formatEquivocalLog(log)
-        val box = new VBox {
-          children = comments.map(str => renderLog(str, color))
-        }
-        box.children += renderLog(logStr, color)
-        box
+        val cssClass = optLv.map(levelToCssClass).getOrElse(defaultLogCssClass)
+        renderHelper(Formatter.formatEquivocalLog(log), richLog.comments, cssClass)
       case log@UnknownLog(_) =>
-        renderLog(Formatter.formatUnknownLog(log), defaultColor)
-    }*/
-    s"""
-       |<div class="rich-log-item"><font>${(log.item.toString::log.comments).mkString("<br/>")}</font></div>
-     """.stripMargin
+        renderHelper(Formatter.formatUnknownLog(log), richLog.comments, defaultLogCssClass)
+    }
   }
 
   def composeRenderedLogs(renderedLogs: List[RenderedLog]): String = {
     s"""
        |<html>
        |<body>
-       |  <pre>${renderedLogs.map(_.htmlString).mkString}</pre>
+       |  <pre id="code-pane">${renderedLogs.map(_.htmlString).mkString}</pre>
        |</body>
        |</html>
      """.stripMargin

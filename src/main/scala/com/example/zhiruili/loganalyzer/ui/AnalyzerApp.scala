@@ -93,7 +93,9 @@ object AnalyzerApp extends JFXApp {
     text = "导入本地日志文件"
     onAction = { _: ActionEvent =>
       clearGlobalInfo()
-      val chooser = new FileChooser
+      val chooser = new FileChooser {
+        title = "选择日志文件"
+      }
       val selectedFile = chooser.showOpenDialog(stage)
       if (selectedFile != null) {
         loadLogFile(selectedFile)
@@ -103,13 +105,16 @@ object AnalyzerApp extends JFXApp {
     }
   }
 
+  // 原始日志显示区域
   val originalLogView = new WebView
   originalLogView.engine.setUserStyleSheetLocation(getClass.getResource("web.css").toString)
 
+  // 带有注释的日志
   val richLogs: ObjectBinding[List[RichLog]] = createObjectBinding(() => {
     logList().map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform)))
   }, logList)
 
+  // 渲染后的日志
   val renderedLogs: ObjectBinding[List[RenderedLog]] = createObjectBinding(() => {
     richLogs().map(log => RenderedLog(log.item, Renderer.renderRichLogToHtml(log)))
   }, richLogs)
@@ -315,10 +320,7 @@ object AnalyzerApp extends JFXApp {
           baseLabel("筛选时间区间 从"), originLogStartTimeTextField, baseLabel("至"), originLogEndTimeTextField
         )
       )
-      center = new ScrollPane {
-        id = "log-scroll-pane"
-        content = originalLogView
-      }
+      center = originalLogView
       bottom = globalInfoView
     }
   }

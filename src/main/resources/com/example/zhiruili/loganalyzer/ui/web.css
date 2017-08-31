@@ -3,6 +3,39 @@ body {
 }
 
 pre {
-  font-size: 80%;
+  font-size: 85%;
   font-family: Consolas, Menlo, "Dejavu Sans Mono", monospace;
+}
+
+.log-error {
+  color: Red;
+}
+
+.log-warn {
+  color: Orange;
+}
+
+.log-info {
+  color: DarkSlateGray;
+}
+
+.log-debug {
+  color: Black;
+}
+
+.log-verbose {
+  color: Gray;
+}
+
+.log-default {
+  color: DimGray
+}
+
+.rich-log-item {
+  margin: 0px;
+  padding: 0px;
+}
+
+#code-pane {
+  padding: 5 0 0 10;
 }
