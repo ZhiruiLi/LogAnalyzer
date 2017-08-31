@@ -17,7 +17,6 @@ import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.paint.Color
 import scalafx.scene.paint.Color._
 import scalafx.scene.text.{Text, TextFlow}
-import scalafx.scene.web.WebView
 
 /**
   * 渲染相关
@@ -109,7 +108,7 @@ object Renderer {
   }
 
   // 映射日志等级和渲染颜色
-  val levelColorMap: Map[LogLevel, Color] =
+  val levelToColorMap: Map[LogLevel, Color] =
     Map(LvError -> Red, LvWarn -> Orange, LvInfo -> Black, LvDebug -> Black, LvVerbose -> DimGray)
 
   // 默认渲染颜色
@@ -121,7 +120,7 @@ object Renderer {
     * @param lv   日志等级
     * @return 渲染颜色
     */
-  def levelColor(lv: LogLevel): Color = levelColorMap.getOrElse(lv, defaultColor)
+  def levelToColor(lv: LogLevel): Color = levelToColorMap.getOrElse(lv, defaultColor)
 
   /**
     * 将日志文字渲染为带颜色的节点
@@ -130,50 +129,37 @@ object Renderer {
     * @param color        颜色
     * @return Text 节点
     */
-  def renderLog(logText: String, color: Color) = new Text {
+  def renderLogToNode(logText: String, color: Color): Node = new Text {
     text = logText
     fill = color
     styleClass += "log"
   }
 
   /**
-    * 渲染不显眼的日志信息
-    *
-    * @param logText    日志文本
-    * @return Text 节点
-    */
-  def renderSilentLog(logText: String) = new Text {
-    text = logText
-    fill = defaultColor
-    styleClass += "log-silent"
-  }
-
-  /**
     * 渲染带有注释的日志
     *
-    * @param logItem    日志项
-    * @param comments   注释列表
+    * @param richLog  带有注释的日志
     * @return 渲染后的节点
     */
-  def renderRichLog(logItem: LogItem, comments: List[String]): Node = logItem match {
+  def renderRichLogToNode(richLog: RichLog): Node = richLog.item match {
     case log@LegalLog(_, _, _, lv, _, _, _) =>
-      val color = levelColor(lv)
+      val color = levelToColor(lv)
       val logStr = Formatter.formatLegalLog(log)
       val box = new VBox {
-        children = comments.map(str => renderLog(str, color))
+        children = richLog.comments.map(str => renderLogToNode(str, color))
       }
-      box.children += renderLog(logStr, color)
+      box.children += renderLogToNode(logStr, color)
       box
     case log@EquivocalLog(_, _, _, optLv, _, _, _) =>
-      val color = optLv.map(levelColor).getOrElse(defaultColor)
+      val color = optLv.map(levelToColor).getOrElse(defaultColor)
       val logStr = Formatter.formatEquivocalLog(log)
       val box = new VBox {
-        children = comments.map(str => renderLog(str, color))
+        children = richLog.comments.map(str => renderLogToNode(str, color))
       }
-      box.children += renderLog(logStr, color)
+      box.children += renderLogToNode(logStr, color)
       box
     case log@UnknownLog(_) =>
-      renderLog(Formatter.formatUnknownLog(log), defaultColor)
+      renderLogToNode(Formatter.formatUnknownLog(log), defaultColor)
   }
 
   /**
@@ -183,7 +169,7 @@ object Renderer {
     * @param richLogs   相应的带有注释的日志列表
     * @return 渲染呢后的节点
     */
-  def renderHelpInfo(helpInfo: HelpInfo, richLogs: List[(LogItem, List[String])]): Node = {
+  def renderHelpInfoToNode(helpInfo: HelpInfo, richLogs: List[RichLog]): Node = {
     def lb(text: String) = new Label(text) { styleClass += "text-emphatic" }
     def tf(text: String) = new TextFlow(new Text(text) { styleClass += "text-emphatic" })
     def link(text: String, link: String) = new Hyperlink(text) {
@@ -198,7 +184,7 @@ object Renderer {
         alignment = Pos.CenterLeft
         children = Seq(lb("帮助页面："), link)
       })
-    val renderedLogs = richLogs.map { case (log, optCom) => renderRichLog(log, optCom) }
+    val renderedLogs = richLogs.map(renderRichLogToNode)
     val tailNodes = {
       val relatedLogNodes = renderedLogs match {
         case Nil => Nil

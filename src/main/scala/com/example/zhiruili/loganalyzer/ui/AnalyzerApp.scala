@@ -31,6 +31,7 @@ object AnalyzerApp extends JFXApp {
 
   object Implicits {
     implicit val logItemPairAsLogItem: ((LogItem, Node)) => LogItem = _._1
+    implicit val renderedLogAsLogItem: RenderedLog => LogItem = _.item
   }
 
   import Implicits._
@@ -109,18 +110,21 @@ object AnalyzerApp extends JFXApp {
   val originalLogView = new WebView
   originalLogView.engine.setUserStyleSheetLocation(getClass.getResource("web.css").toString)
 
-  // 带有注释的日志
-  val richLogs: ObjectBinding[List[RichLog]] = createObjectBinding(() => {
-    logList().map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform)))
-  }, logList)
-
   // 渲染后的日志
   val renderedLogs: ObjectBinding[List[RenderedLog]] = createObjectBinding(() => {
-    richLogs().map(log => RenderedLog(log.item, Renderer.renderRichLogToHtml(log)))
-  }, richLogs)
+    logList()
+      .map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform)))
+      .map(log => RenderedLog(log.item, Renderer.renderRichLogToHtml(log)))
+  }, logList)
+
+  // 显示的日志
+  val showLogs: ObjectProperty[List[RenderedLog]] = ObjectProperty(Nil)
+  showLogs.onChange {
+    originalLogView.engine.loadContent(Renderer.composeRenderedLogs(showLogs()))
+  }
 
   renderedLogs.onChange {
-    originalLogView.engine.loadContent(Renderer.composeRenderedLogs(renderedLogs()))
+    updateOriginLogList()
   }
 
   val filterIsUpdated = BooleanProperty(false)
@@ -182,29 +186,28 @@ object AnalyzerApp extends JFXApp {
 
   // 更新日志浏览区域的日志内容
   def updateOriginLogList(): Unit = {
-    println("update!")
-    /*val logsAfterFilter =
+    val logsAfterFilter =
       logs.Utils.timeFilter(originLogStartTimeTextField.getTime, originLogEndTimeTextField.getTime)(renderedLogs())
     val matchRegex = (str: String, regexStr: String) => regexStr.r.findFirstIn(str).nonEmpty
-    val newNodes: List[Node] = logsAfterFilter
+    showLogs() = logsAfterFilter
       .filter {
-        case (LegalLog(_, _, isKey, lv, pos, msg, _), _) =>
+        case RenderedLog(LegalLog(_, _, isKey, lv, pos, msg, _), _) =>
           def matchIsKey = filterOptIsKeyLog.forall(_ == isKey)
           def matchLv = filterMinLogLevel <= lv
           def matchPos = filterPosition.forall(_.r.findFirstIn(pos).nonEmpty)
           def matchMsg = filterMessage.forall(_.r.findFirstIn(msg).nonEmpty)
           matchIsKey && matchLv && matchPos && matchMsg
-        case (EquivocalLog(_, _, optIsKey, optLv, optPos, optMsg, _), _) =>
+        case RenderedLog(EquivocalLog(_, _, optIsKey, optLv, optPos, optMsg, _), _) =>
           def matchIsKey = testIfDefined(optIsKey, filterOptIsKeyLog, (b: Boolean, fB: Boolean) => b == fB)
           def matchLv = optLv.forall(_ >= filterMinLogLevel)
           def matchPos = testIfDefined(optPos, filterPosition, matchRegex)
           def matchMsg = testIfDefined(optMsg, filterMessage, matchRegex)
           matchIsKey && matchLv && matchPos && matchMsg
-        case (UnknownLog(log), _) =>
+        case RenderedLog(UnknownLog(log), _) =>
           includeUnknown &&
             testIfDefined(Some(log), filterPosition, matchRegex) &&
             testIfDefined(Some(log), filterMessage, matchRegex)
-      }*/
+      }
   }
 
   // 监视日志过滤选项的刷新
@@ -248,9 +251,9 @@ object AnalyzerApp extends JFXApp {
       case Some(helps) => helps
     }
     val renderedHelps = infos.map { case (helpInfos, logs) =>
-      (helpInfos, logs.map(log => (log, AnalyzerHelper.commentLog(log, selectedPlatform))))
-    }.map { case (helpInfo, commentedLogs) =>
-      Renderer.renderHelpInfo(helpInfo, commentedLogs)
+      (helpInfos, logs.map(log => RichLog(log, AnalyzerHelper.commentLog(log, selectedPlatform))))
+    }.map { case (helpInfo, richLogs) =>
+      Renderer.renderHelpInfoToNode(helpInfo, richLogs)
     }
     analyzeResultShowNodes() = renderedHelps
   }
@@ -355,6 +358,7 @@ object AnalyzerApp extends JFXApp {
       }
     }
   }
+  // 实际宽度在 Mac 和 Windows 上有不同的表现
   if (isMac) {
     mainContainer.prefWidth <== stage.width
     mainContainer.prefHeight <== stage.height - 22

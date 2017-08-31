@@ -24,11 +24,11 @@ pre {
 }
 
 .log-verbose {
-  color: Gray;
+  color: DimGray;
 }
 
 .log-default {
-  color: DimGray
+  color: DarkGray;
 }
 
 .rich-log-item {
