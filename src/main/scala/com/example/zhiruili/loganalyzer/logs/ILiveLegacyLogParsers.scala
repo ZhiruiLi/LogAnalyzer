@@ -8,6 +8,9 @@ import java.util.{Calendar, Date}
 import scala.util.Try
 import scala.util.parsing.combinator.RegexParsers
 
+/**
+  * 遗留 iLive SDK 日志的解析器
+  */
 object ILiveLegacyLogParsers {
 
   object ofAndroid extends LogParser {

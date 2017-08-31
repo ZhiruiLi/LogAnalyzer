@@ -2,6 +2,10 @@ package com.example.zhiruili.loganalyzer.logs
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  * 日志解析器的代理链，通过将一个 Parser 和多个 Parser 组合，
+  * 实现当第一个 Parser 解析失败后由代理 Parsers 依次解析，直到解析成功或没有更多的 Parser
+  */
 trait LogParserDelegateChain extends LogParser {
 
   def basicParser: LogParser

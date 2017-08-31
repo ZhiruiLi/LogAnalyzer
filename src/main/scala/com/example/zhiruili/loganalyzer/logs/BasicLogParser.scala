@@ -6,6 +6,9 @@ import java.util.{Calendar, Date}
 import scala.util.Try
 import scala.util.parsing.combinator.RegexParsers
 
+/**
+  * 新版日志的基本解析器
+  */
 object BasicLogParser extends LogParser {
 
   type Position = String

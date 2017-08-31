@@ -5,7 +5,7 @@ import com.example.zhiruili.loganalyzer.logs._
 import scala.annotation.tailrec
 
 /**
-  * 基础日志
+  * 基础日志匹配规则
   */
 object BasicRules {
 

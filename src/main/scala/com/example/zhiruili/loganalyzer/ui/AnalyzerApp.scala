@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
 import scalafx.Includes._
 import scalafx.animation.{KeyFrame, Timeline}
 import scalafx.application.{JFXApp, Platform}
-import scalafx.beans.binding.{Bindings, BooleanBinding, ObjectBinding}
+import scalafx.beans.binding.{Bindings, BooleanBinding}
 import scalafx.beans.property.{BooleanProperty, ObjectProperty, StringProperty}
 import scalafx.collections.ObservableBuffer
 import scalafx.scene.{Node, Scene}

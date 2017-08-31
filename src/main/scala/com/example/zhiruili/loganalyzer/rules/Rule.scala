@@ -2,10 +2,12 @@ package com.example.zhiruili.loganalyzer.rules
 
 import com.example.zhiruili.loganalyzer.logs.LogItem
 
+/**
+  * 匹配结果
+  */
 sealed trait MatchResult
 case class MatchSuccess(matchLogs: List[LogItem], skipLogs: List[LogItem], remainLogs: List[LogItem]) extends MatchResult
 case class MatchFailure(mismatchLogs: List[LogItem], matchLogs: List[LogItem], skipLogs: List[LogItem], remainLogs: List[LogItem]) extends MatchResult
-// case class MatchError(thw: Throwable) extends MatchResult
 
 /**
   * 匹配规则

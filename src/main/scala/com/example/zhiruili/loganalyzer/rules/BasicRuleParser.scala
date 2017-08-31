@@ -7,6 +7,9 @@ import BasicRuleContract._
 
 import scala.util.{Failure, Success, Try}
 
+/**
+  * 基本规则的解析器
+  */
 object BasicRuleParser extends RuleParser {
 
   /**
