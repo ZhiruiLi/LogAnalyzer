@@ -50,19 +50,19 @@ sbt run
 
 - 双击run.jar 文件运行程序，开启后选择平台并导入日志文件，同时也支持直接把日志文件拖放到程序主界面上来打开文件：
 
-  ![load_log_file](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/master/imgs/load_log_file.png)
+  ![load_log_file](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/imgs/load_log_file.png)
 
 - 基本界面说明
 
   日志导入后界面如下：
 
-  ![main_screen](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/master/imgs/main_screen.png)
+  ![main_screen](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/imgs/main_screen.png)
 
   在选定发生的问题之后，点击开始分析按钮，进行日志分析。在开始分析之前可以划定时间范围，以便进行更精确的分析。执行之后会给出建议。
 
   **注意：旧版日志不支持日志分析功能，仅能浏览日志，对旧版日志进行分析的结果没有参考意义。**
 
-  ![help_info](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/master/imgs/help_info.png)
+  ![help_info](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/imgs/help_info.png)
 
 - 原始日志浏览界面说明
 
@@ -96,7 +96,7 @@ sbt run
 
     日志筛选的时间的格式是 `yy-MM-dd HH:mm:ss` 也就是 2017 年 1 月 3 日 下午 3 点 10 分 2 秒应该写为：`17-01-03 15:10:02` 。
 
-    ![log_filter](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/master/imgs/log_filter.png)
+    ![log_filter](https://raw.githubusercontent.com/ZhiruiLi/LogAnalyzer/imgs/log_filter.png)
 
 - Q & A
 
